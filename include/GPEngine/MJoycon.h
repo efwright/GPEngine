@@ -35,15 +35,14 @@
 // for moving the joystick (I'm not sure what to do with controllers
 // that have two joysticks?), and an interface for buttons.
 
-class MEngine;
 class MJoyconInterface;
 
 class MJoycon {
   public:
     MJoycon();
     ~MJoycon();
-    bool init(MEngine*);
-    bool init(MEngine*, int);
+    bool init();
+    bool init(int);
     void close();
     int getNum();
     void moveLeftX(int x);
@@ -56,7 +55,6 @@ class MJoycon {
     const int JOYSTICK_DEAD_ZONE = 8000;
     void free();
     int joyconNum;
-    MEngine* engine;
     int numButtons;
 };
 

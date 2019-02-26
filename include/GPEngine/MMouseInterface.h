@@ -7,6 +7,7 @@
 
 class MMouseInterface {
   public:
+    virtual void init(){};
     virtual void leftClickDown(int x, int y) {};
     virtual void rightClickDown(int x, int y) {};
     virtual void middleClickDown(int x, int y) {};

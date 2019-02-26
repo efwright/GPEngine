@@ -6,6 +6,8 @@
 #include "MTexture.h"
 #include "MRect.h"
 
+using namespace GPE;
+
 //! Give a physical, easy to draw rectangle to a texture
 
 class MObject {

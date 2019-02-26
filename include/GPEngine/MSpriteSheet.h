@@ -11,6 +11,8 @@
 #include "MTexture.h"
 #include "MRect.h"
 
+using namespace GPE;
+
 //! Organize MTexture as a group of sprites
 
 class MSpriteSheet {

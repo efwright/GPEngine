@@ -9,7 +9,7 @@
 
 class MRenderInterface {
   public:
-    virtual void init() {};
+    virtual void init(int, int, unsigned int) {};
     virtual void render() {};
   private:
 };

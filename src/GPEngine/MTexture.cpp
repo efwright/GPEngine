@@ -12,17 +12,159 @@
 #include "MTexture.h"
 #include "MEngine.h"
 
-MTexture::MTexture() {
+using namespace GPE;
+
+SDL_Surface*  loadSurface(std::string path) {
+  SDL_Surface* loadedSurface = NULL;
+  loadedSurface = IMG_Load(path.c_str());
+  if(loadedSurface == NULL) {
+    printf("Unable to load image %s! SDL_image Error: %s\n",
+      path.c_str(), IMG_GetError());
+  }
+  SDL_Surface* temp =
+    SDL_CreateRGBSurface(loadedSurface->flags, 
+      loadedSurface->w, 
+      loadedSurface->h,
+      32,
+      loadedSurface->format->Rmask, loadedSurface->format->Gmask,
+      loadedSurface->format->Bmask, loadedSurface->format->Amask);
+  if(temp == NULL) {
+    printf("Unable to create image! SDL Error: %s\n",
+      SDL_GetError());
+  }
+//printf("before blendnone\n");
+  SDL_SetSurfaceBlendMode(temp, SDL_BLENDMODE_NONE);
+//printf("after blendnone\n");
+  if(SDL_BlitSurface(loadedSurface, NULL, temp, NULL) < 0) {
+    printf("Unable to blit surface %s\n", SDL_GetError());
+  }
+  SDL_FreeSurface(loadedSurface);
+  return temp;
+}
+
+SDL_Surface*  resizeSurface(SDL_Surface* src, int w, int h) {
+  SDL_Surface* resizedSurface = 
+    SDL_CreateRGBSurface(src->flags, w, h, 
+      src->format->BitsPerPixel,
+      src->format->Rmask, src->format->Gmask,
+      src->format->Bmask, src->format->Amask);
+  if(resizedSurface == NULL) {
+    printf("Unable to create resized image! SDL Error: %s\n",
+      SDL_GetError());
+  }
+//printf("Before blendresize\n");
+  SDL_SetSurfaceBlendMode(resizedSurface, SDL_BLENDMODE_BLEND);
+//printf("after blendresize\n");
+  if(SDL_BlitScaled(src, NULL, resizedSurface, NULL) < 0) {
+    printf("Error blitscaled %s\n", SDL_GetError());
+  }
+  return resizedSurface;
+}
+
+SDL_Texture*  createTexture(SDL_Surface* src)
+{
+  SDL_Texture* newTexture = NULL;
+  newTexture =
+    SDL_CreateTextureFromSurface(gRenderer, src);
+  if(newTexture == NULL) {
+    printf("Unable to create texture from surface! SDL Error: %s\n",
+      SDL_GetError());
+  }
+//printf("Before blendcreatetexture\n");
+  SDL_SetTextureBlendMode(newTexture, SDL_BLENDMODE_BLEND);
+//printf("after blendcreatetexture\n");
+  return newTexture;
+}
+
+SDL_Surface*  createSurface(SDL_Surface* src, int w, int h) {
+  SDL_Surface* dst = NULL;
+  dst = SDL_CreateRGBSurface(0, w, h,
+    src->format->BitsPerPixel,
+    src->format->Rmask, src->format->Gmask,
+    src->format->Bmask, src->format->Amask);
+  if(dst == NULL) {
+    printf("Failed to create new surface: %s\n", SDL_GetError());
+  }
+//printf("Before blend\n");
+  SDL_SetSurfaceBlendMode(dst, SDL_BLENDMODE_BLEND);
+//printf("After blend\n");
+  return dst;
+}
+
+std::string*  getPaths(int &size, std::string base,
+                                std::string mod, std::string ext)
+{
+  std::string::size_type sz;
+  int start = std::stoi(
+    base.substr( base.length()-mod.length(), mod.length() ), &sz );
+  int end = std::stoi( mod, &sz );
+  if(start > end) {
+    printf("Base and Mod values not compatible in MTexture::load\n");
+    return NULL;
+  }
+  size = end-start+1;
+  std::string* paths = new std::string[size];
+  for(int i = start; i <= end; i++) {
+    std::string pStr = std::to_string(i);
+    for(int j = pStr.length(); j < mod.length(); j++) {
+      pStr = "0" + pStr;
+    }
+    paths[i-start] = base.substr( 0, base.length()-mod.length() ) +
+                     pStr + ext;
+  }
+  return paths;
+}
+
+SDL_Surface**  loadSurfaces(std::string* paths, int numPaths)
+{
+  SDL_Surface** surfaces = new SDL_Surface*[numPaths];
+  for(int i = 0; i < numPaths; i++) {
+    surfaces[i] = loadSurface(paths[i]);
+  }
+  return surfaces;
+}
+
+void  resizeSurfaces(SDL_Surface** surfaces, int numSurfaces,
+                    int w, int h)
+{
+  for(int i = 0; i < numSurfaces; i++) {
+    SDL_Surface* temp = resizeSurface(surfaces[i], w, h);
+    SDL_FreeSurface(surfaces[i]);
+    surfaces[i] = temp;
+  }
+}
+
+SDL_Surface*  stitchSurfaces(SDL_Surface** surfaces,
+  int numSurfaces, int x, int y)
+{
+  int w = surfaces[0]->w;
+  int h = surfaces[0]->h;
+  SDL_Surface* stitchedSurface = createSurface(surfaces[0],
+    w*x, h*y);
+
+  SDL_Rect srcRect = {0, 0, w, h};
+  for(int i = 0; i < x; i++) {
+    for(int j = 0; j < y; j++) {
+      if(j*x+i >= numSurfaces) continue;
+      SDL_Rect dstRect = {i*w, j*h, w, h};
+      SDL_BlitSurface(surfaces[j*x+i], &srcRect,
+                      stitchedSurface, &dstRect);
+    }
+  }
+  return stitchedSurface;
+}
+
+GPE::MTexture::MTexture() {
   texture = NULL;
   width = 0;
   height = 0;
 }
 
-MTexture::~MTexture() {
+GPE::MTexture::~MTexture() {
   free();
 }
 
-void MTexture::free() {
+void GPE::MTexture::free() {
   if(texture != NULL) {
     SDL_DestroyTexture(texture);
     texture = NULL;
@@ -31,7 +173,7 @@ void MTexture::free() {
   height = 0;
 }
 
-bool MTexture::load(std::string path) {
+bool GPE::MTexture::load(std::string path) {
   free();
   SDL_Surface* loadedSurface = loadSurface(path);
   texture = createTexture(loadedSurface);
@@ -43,7 +185,7 @@ bool MTexture::load(std::string path) {
   return texture != NULL;
 }
 
-bool MTexture::load(std::string path,
+bool GPE::MTexture::load(std::string path,
  Uint8 r, Uint8 g, Uint8 b)
 {
   free();
@@ -59,7 +201,7 @@ bool MTexture::load(std::string path,
   return texture != NULL;
 }
 
-bool MTexture::load(std::string base, std::string mod, std::string ext,
+bool GPE::MTexture::load(std::string base, std::string mod, std::string ext,
                     int x, int y)
 {
   free();
@@ -69,7 +211,7 @@ bool MTexture::load(std::string base, std::string mod, std::string ext,
   delete[] paths;
 }
 
-bool MTexture::load(std::string* paths, int numPaths,
+bool GPE::MTexture::load(std::string* paths, int numPaths,
                     int x, int y)
 {
   free();
@@ -110,7 +252,7 @@ bool MTexture::load(std::string* paths, int numPaths,
   delete[] surfaces;
 }
 
-bool MTexture::loadScaled(std::string path,
+bool GPE::MTexture::loadScaled(std::string path,
                           int w, int h)
 {
   free();
@@ -128,7 +270,7 @@ bool MTexture::loadScaled(std::string path,
   return texture != NULL;
 }
 
-bool MTexture::loadScaled(std::string path, int w)
+bool GPE::MTexture::loadScaled(std::string path, int w)
 {
   free();
 
@@ -148,7 +290,7 @@ bool MTexture::loadScaled(std::string path, int w)
   return texture != NULL;
 }
 
-bool MTexture::loadScaled(std::string path,
+bool GPE::MTexture::loadScaled(std::string path,
                           double percent)
 {
   free();
@@ -167,7 +309,7 @@ bool MTexture::loadScaled(std::string path,
   return texture != NULL;
 }
 
-bool MTexture::loadScaled(std::string path,
+bool GPE::MTexture::loadScaled(std::string path,
                           double percentWidth, double percentHeight)
 {
   free();
@@ -186,7 +328,7 @@ bool MTexture::loadScaled(std::string path,
   return texture != NULL;
 }
 
-bool MTexture::loadScaled(std::string base, std::string mod,
+bool GPE::MTexture::loadScaled(std::string base, std::string mod,
                           std::string ext,
                           int x, int y, int w, int h)
 {
@@ -197,7 +339,7 @@ bool MTexture::loadScaled(std::string base, std::string mod,
   delete[] paths;
 }
 
-bool MTexture::loadScaled(std::string base, std::string mod,
+bool GPE::MTexture::loadScaled(std::string base, std::string mod,
                           std::string ext,
                           int x, int y, int w)
 {
@@ -208,7 +350,7 @@ bool MTexture::loadScaled(std::string base, std::string mod,
   delete[] paths;
 }
 
-bool MTexture::loadScaled(std::string base, std::string mod,
+bool GPE::MTexture::loadScaled(std::string base, std::string mod,
                           std::string ext,
                           int x, int y, double percent)
 {
@@ -241,7 +383,7 @@ bool MTexture::loadScaled(std::string base, std::string mod,
   delete[] paths;
 }
 
-bool MTexture::loadScaled(std::string base, std::string mod,
+bool GPE::MTexture::loadScaled(std::string base, std::string mod,
                           std::string ext,
                           int x, int y,
                           double percentWidth, double percentHeight)
@@ -275,7 +417,7 @@ bool MTexture::loadScaled(std::string base, std::string mod,
   delete[] paths;
 }
 
-bool MTexture::loadScaled(std::string* paths, int numPaths,
+bool GPE::MTexture::loadScaled(std::string* paths, int numPaths,
                           int x, int y, int w, int h)
 {
   free();
@@ -302,7 +444,7 @@ bool MTexture::loadScaled(std::string* paths, int numPaths,
   delete[] surfaces;
 }
 
-bool MTexture::loadScaled(std::string* paths, int numPaths,
+bool GPE::MTexture::loadScaled(std::string* paths, int numPaths,
                           int x, int y, int w)
 {
   free();
@@ -331,7 +473,7 @@ bool MTexture::loadScaled(std::string* paths, int numPaths,
   delete[] surfaces;
 }
 
-bool MTexture::loadText(std::string text, MFont* font, MColor color)
+bool GPE::MTexture::loadText(std::string text, MFont* font, MColor color)
 {
   free();
   SDL_Surface* textSurface = TTF_RenderText_Solid(font->getTTFFont(),
@@ -366,11 +508,11 @@ void MTexture::render(int x, int y,
     renderQuad.h = resize->h;
   }
 
-  SDL_RenderCopy( gSDLRenderer, texture,
+  SDL_RenderCopy( gRenderer, texture,
                   clipRect, &renderQuad );
 }
 
-void MTexture::render(int x, int y,
+void GPE::MTexture::render(int x, int y,
                       int anchorX, int anchorY,
                       MRect* clip, MRect* resize)
 {
@@ -389,11 +531,11 @@ void MTexture::render(int x, int y,
     renderQuad.h = resize->h;
   }
 
-  SDL_RenderCopy( gSDLRenderer, texture,
+  SDL_RenderCopy( gRenderer, texture,
                   clipRect, &renderQuad );
 }
 
-void MTexture::renderCentered(int x, int y,
+void GPE::MTexture::renderCentered(int x, int y,
                         MRect* clip, MRect* resize)
 {
   if(resize != NULL) {
@@ -405,7 +547,7 @@ void MTexture::renderCentered(int x, int y,
   }
 }
 
-void MTexture::renderBottomLeft(int x, int y,
+void GPE::MTexture::renderBottomLeft(int x, int y,
                           MRect* clip, MRect* resize)
 {
   if(resize != NULL) {
@@ -417,7 +559,7 @@ void MTexture::renderBottomLeft(int x, int y,
   }
 }
 
-void MTexture::renderBottomRight(int x, int y,
+void GPE::MTexture::renderBottomRight(int x, int y,
                           MRect* clip, MRect* resize)
 {
   if(resize != NULL) {
@@ -429,7 +571,7 @@ void MTexture::renderBottomRight(int x, int y,
   }
 }
 
-void MTexture::renderTopRight(int x, int y,
+void GPE::MTexture::renderTopRight(int x, int y,
                           MRect* clip, MRect* resize)
 {
   if(resize != NULL) {
@@ -441,7 +583,7 @@ void MTexture::renderTopRight(int x, int y,
   }
 }
 
-void MTexture::renderAnchored(int x, int y,
+void GPE::MTexture::renderAnchored(int x, int y,
                           int anchorX, int anchorY,
                           MRect* clip, MRect* resize)
 {
@@ -460,11 +602,11 @@ void MTexture::renderAnchored(int x, int y,
     renderQuad.h = resize->h;
   }
 
-  SDL_RenderCopy( gSDLRenderer, texture,
+  SDL_RenderCopy( gRenderer, texture,
                   clipRect, &renderQuad );
 }
 
-void MTexture::renderEx(int x, int y,
+void GPE::MTexture::renderEx(int x, int y,
                   double angle, SDL_RendererFlip flip,
                   MRect* clip, MRect* resize)
 {
@@ -485,12 +627,12 @@ void MTexture::renderEx(int x, int y,
 
   SDL_Point center = {width/2, height/2};
 
-  SDL_RenderCopyEx( gSDLRenderer, texture,
+  SDL_RenderCopyEx( gRenderer, texture,
                   clipRect, &renderQuad,
                   angle, &center, flip );
 }
 
-void MTexture::renderCenteredEx(int x, int y,
+void GPE::MTexture::renderCenteredEx(int x, int y,
                   double angle, SDL_RendererFlip flip,
                   MRect* clip, MRect* resize)
 {
@@ -513,158 +655,16 @@ void MTexture::renderCenteredEx(int x, int y,
 
   SDL_Point center = {width/2, height/2};
 
-  SDL_RenderCopyEx( gSDLRenderer, texture,
+  SDL_RenderCopyEx( gRenderer, texture,
                   clipRect, &renderQuad,
                   angle, &center, flip );
 }
 
-int MTexture::getWidth() { return width; }
+int GPE::MTexture::getWidth() { return width; }
 
-int MTexture::getHeight() { return height; }
+int GPE::MTexture::getHeight() { return height; }
 
-SDL_Surface* loadSurface(std::string path) {
-  SDL_Surface* loadedSurface = NULL;
-  loadedSurface = IMG_Load(path.c_str());
-  if(loadedSurface == NULL) {
-    printf("Unable to load image %s! SDL_image Error: %s\n",
-      path.c_str(), IMG_GetError());
-  }
-  SDL_Surface* temp =
-    SDL_CreateRGBSurface(loadedSurface->flags, 
-      loadedSurface->w, 
-      loadedSurface->h,
-      32,
-      loadedSurface->format->Rmask, loadedSurface->format->Gmask,
-      loadedSurface->format->Bmask, loadedSurface->format->Amask);
-  if(temp == NULL) {
-    printf("Unable to create image! SDL Error: %s\n",
-      SDL_GetError());
-  }
-//printf("before blendnone\n");
-  SDL_SetSurfaceBlendMode(temp, SDL_BLENDMODE_NONE);
-//printf("after blendnone\n");
-  if(SDL_BlitSurface(loadedSurface, NULL, temp, NULL) < 0) {
-    printf("Unable to blit surface %s\n", SDL_GetError());
-  }
-  SDL_FreeSurface(loadedSurface);
-  return temp;
-}
-
-SDL_Surface* resizeSurface(SDL_Surface* src, int w, int h) {
-  SDL_Surface* resizedSurface = 
-    SDL_CreateRGBSurface(src->flags, w, h, 
-      src->format->BitsPerPixel,
-      src->format->Rmask, src->format->Gmask,
-      src->format->Bmask, src->format->Amask);
-  if(resizedSurface == NULL) {
-    printf("Unable to create resized image! SDL Error: %s\n",
-      SDL_GetError());
-  }
-//printf("Before blendresize\n");
-  SDL_SetSurfaceBlendMode(resizedSurface, SDL_BLENDMODE_BLEND);
-//printf("after blendresize\n");
-  if(SDL_BlitScaled(src, NULL, resizedSurface, NULL) < 0) {
-    printf("Error blitscaled %s\n", SDL_GetError());
-  }
-  return resizedSurface;
-}
-
-SDL_Texture* createTexture(SDL_Surface* src)
-{
-  SDL_Texture* newTexture = NULL;
-  SDL_AtomicLock(&gSDLTextureLock);
-  newTexture =
-    SDL_CreateTextureFromSurface(gSDLRenderer, src);
-  SDL_AtomicUnlock(&gSDLTextureLock);
-  if(newTexture == NULL) {
-    printf("Unable to create texture from surface! SDL Error: %s\n",
-      SDL_GetError());
-  }
-//printf("Before blendcreatetexture\n");
-  SDL_SetTextureBlendMode(newTexture, SDL_BLENDMODE_BLEND);
-//printf("after blendcreatetexture\n");
-  return newTexture;
-}
-
-SDL_Surface* createSurface(SDL_Surface* src, int w, int h) {
-  SDL_Surface* dst = NULL;
-  dst = SDL_CreateRGBSurface(0, w, h,
-    src->format->BitsPerPixel,
-    src->format->Rmask, src->format->Gmask,
-    src->format->Bmask, src->format->Amask);
-  if(dst == NULL) {
-    printf("Failed to create new surface: %s\n", SDL_GetError());
-  }
-//printf("Before blend\n");
-  SDL_SetSurfaceBlendMode(dst, SDL_BLENDMODE_BLEND);
-//printf("After blend\n");
-  return dst;
-}
-
-std::string* getPaths(int &size, std::string base,
-                                std::string mod, std::string ext)
-{
-  std::string::size_type sz;
-  int start = std::stoi(
-    base.substr( base.length()-mod.length(), mod.length() ), &sz );
-  int end = std::stoi( mod, &sz );
-  if(start > end) {
-    printf("Base and Mod values not compatible in MTexture::load\n");
-    return NULL;
-  }
-  size = end-start+1;
-  std::string* paths = new std::string[size];
-  for(int i = start; i <= end; i++) {
-    std::string pStr = std::to_string(i);
-    for(int j = pStr.length(); j < mod.length(); j++) {
-      pStr = "0" + pStr;
-    }
-    paths[i-start] = base.substr( 0, base.length()-mod.length() ) +
-                     pStr + ext;
-  }
-  return paths;
-}
-
-SDL_Surface** loadSurfaces(std::string* paths, int numPaths)
-{
-  SDL_Surface** surfaces = new SDL_Surface*[numPaths];
-  for(int i = 0; i < numPaths; i++) {
-    surfaces[i] = loadSurface(paths[i]);
-  }
-  return surfaces;
-}
-
-void resizeSurfaces(SDL_Surface** surfaces, int numSurfaces,
-                    int w, int h)
-{
-  for(int i = 0; i < numSurfaces; i++) {
-    SDL_Surface* temp = resizeSurface(surfaces[i], w, h);
-    SDL_FreeSurface(surfaces[i]);
-    surfaces[i] = temp;
-  }
-}
-
-SDL_Surface* stitchSurfaces(SDL_Surface** surfaces,
-  int numSurfaces, int x, int y)
-{
-  int w = surfaces[0]->w;
-  int h = surfaces[0]->h;
-  SDL_Surface* stitchedSurface = createSurface(surfaces[0],
-    w*x, h*y);
-
-  SDL_Rect srcRect = {0, 0, w, h};
-  for(int i = 0; i < x; i++) {
-    for(int j = 0; j < y; j++) {
-      if(j*x+i >= numSurfaces) continue;
-      SDL_Rect dstRect = {i*w, j*h, w, h};
-      SDL_BlitSurface(surfaces[j*x+i], &srcRect,
-                      stitchedSurface, &dstRect);
-    }
-  }
-  return stitchedSurface;
-}
-
-MTexture *create_texture(std::string path) {
+MTexture * GPE::create_texture(std::string path) {
   MTexture *ntexture = new MTexture();
   if(ntexture->load(path)) {
     return ntexture;
@@ -674,7 +674,7 @@ MTexture *create_texture(std::string path) {
   }
 }
 
-MTexture *create_texture(std::string path, Uint8 r, Uint8 g, Uint8 b) {
+MTexture * GPE::create_texture(std::string path, Uint8 r, Uint8 g, Uint8 b) {
   MTexture *ntexture = new MTexture();
   if(ntexture->load(path, r, g, b)) {
     return ntexture;
@@ -684,7 +684,7 @@ MTexture *create_texture(std::string path, Uint8 r, Uint8 g, Uint8 b) {
   }
 }
 
-MTexture *create_texture(std::string path, std::string mod, std::string ext, int x, int y) {
+MTexture * GPE::create_texture(std::string path, std::string mod, std::string ext, int x, int y) {
   MTexture *ntexture = new MTexture();
   if(ntexture->load(path, mod, ext, x, y)) {
     return ntexture;
@@ -694,7 +694,7 @@ MTexture *create_texture(std::string path, std::string mod, std::string ext, int
   }
 }
 
-MTexture *create_texture(std::string *paths, int numPaths, int x, int y) {
+MTexture * GPE::create_texture(std::string *paths, int numPaths, int x, int y) {
   MTexture *ntexture = new MTexture();
   if(ntexture->load(paths, numPaths, x, y)) {
     return ntexture;
@@ -704,7 +704,7 @@ MTexture *create_texture(std::string *paths, int numPaths, int x, int y) {
   }
 }
 
-MTexture *create_texture_scaled(std::string path, int w, int h) {
+MTexture * GPE::create_texture_scaled(std::string path, int w, int h) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(path, w, h)) {
     return ntexture;
@@ -714,7 +714,7 @@ MTexture *create_texture_scaled(std::string path, int w, int h) {
   }
 }
 
-MTexture *create_texture_scaled(std::string path, int w) {
+MTexture * GPE::create_texture_scaled(std::string path, int w) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(path, w)) {
     return ntexture;
@@ -724,7 +724,7 @@ MTexture *create_texture_scaled(std::string path, int w) {
   }
 }
 
-MTexture *create_texture_scaled(std::string path, double percent) {
+MTexture * GPE::create_texture_scaled(std::string path, double percent) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(path, percent)) {
     return ntexture;
@@ -734,7 +734,7 @@ MTexture *create_texture_scaled(std::string path, double percent) {
   }
 }
 
-MTexture *create_texture_scaled(std::string path, double percentX, double percentY) {
+MTexture * GPE::create_texture_scaled(std::string path, double percentX, double percentY) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(path, percentX, percentY)) {
     return ntexture;
@@ -744,7 +744,7 @@ MTexture *create_texture_scaled(std::string path, double percentX, double percen
   }
 }
 
-MTexture *create_texture_scaled(std::string base, std::string mod, std::string ext, int x, int y, int w, int h) {
+MTexture * GPE::create_texture_scaled(std::string base, std::string mod, std::string ext, int x, int y, int w, int h) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(base, mod, ext, x, y, w, h)) {
     return ntexture;
@@ -754,7 +754,7 @@ MTexture *create_texture_scaled(std::string base, std::string mod, std::string e
   }
 }
 
-MTexture *create_texture_scaled(std::string base, std::string mod, std::string ext, int x, int y, int w) {
+MTexture * GPE::create_texture_scaled(std::string base, std::string mod, std::string ext, int x, int y, int w) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(base, mod, ext, x, y, w)) {
     return ntexture;
@@ -764,7 +764,7 @@ MTexture *create_texture_scaled(std::string base, std::string mod, std::string e
   }
 }
 
-MTexture *create_texture_scaled(std::string base, std::string mod, std::string ext, int x, int y, double percent) {
+MTexture * GPE::create_texture_scaled(std::string base, std::string mod, std::string ext, int x, int y, double percent) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(base, mod, ext, x, y, percent)) {
     return ntexture;
@@ -774,7 +774,7 @@ MTexture *create_texture_scaled(std::string base, std::string mod, std::string e
   }
 }
 
-MTexture *create_texture_scaled(std::string base, std::string mod, std::string ext, int x, int y, double percentX, double percentY) {
+MTexture * GPE::create_texture_scaled(std::string base, std::string mod, std::string ext, int x, int y, double percentX, double percentY) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(base, mod, ext, x, y, percentX, percentY)) {
     return ntexture;
@@ -784,7 +784,7 @@ MTexture *create_texture_scaled(std::string base, std::string mod, std::string e
   }
 }
 
-MTexture *create_texture_scaled(std::string *paths, int numPaths, int x, int y, int w, int h) {
+MTexture * GPE::create_texture_scaled(std::string *paths, int numPaths, int x, int y, int w, int h) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(paths, numPaths, x, y, w, h)) {
     return ntexture;
@@ -794,7 +794,7 @@ MTexture *create_texture_scaled(std::string *paths, int numPaths, int x, int y, 
   }
 }
 
-MTexture *create_texture_scaled(std::string *paths, int numPaths, int x, int y, int w) {
+MTexture * GPE::create_texture_scaled(std::string *paths, int numPaths, int x, int y, int w) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadScaled(paths, numPaths, x, y, w)) {
     return ntexture;
@@ -804,7 +804,7 @@ MTexture *create_texture_scaled(std::string *paths, int numPaths, int x, int y, 
   }
 }
 
-MTexture *create_texture_text(std::string text, MFont* font, MColor color) {
+MTexture * GPE::create_texture_text(std::string text, MFont* font, MColor color) {
   MTexture *ntexture = new MTexture();
   if(ntexture->loadText(text, font, color)) {
     return ntexture;
@@ -814,8 +814,7 @@ MTexture *create_texture_text(std::string text, MFont* font, MColor color) {
   }
 }
 
-void destroy_texture(MTexture* texture) {
+void  GPE::destroy_texture(MTexture* texture) {
   delete texture;
 }
-
 

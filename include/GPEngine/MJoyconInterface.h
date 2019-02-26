@@ -11,6 +11,7 @@ class MJoycon;
 
 class MJoyconInterface {
   public:
+    virtual void init() {};
     virtual void initJoycon(MJoycon*) {};
     virtual void joyconX(int x, int joycon) {};
     virtual void joyconY(int y, int joycon) {};

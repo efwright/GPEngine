@@ -10,354 +10,272 @@
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_net.h>
 
-#include "MWindow.h"
-#include "MTexture.h"
-#include "MSpriteSheet.h"
-#include "MRect.h"
-#include "MSound.h"
-#include "MJoycon.h"
+#include "MGame.h"
+#include "MKeyboardInterface.h"
 #include "MMouseInterface.h"
 #include "MJoyconInterface.h"
 #include "MRenderInterface.h"
-#include "MQueue.h"
-#include "MUDPSocket.h"
-#include "MPacket.h"
 
 #include "MEngine.h"
 
-SDL_cond* renderTrigger;
-SDL_cond* doneRenderTrigger;
+using namespace GPE;
+
+// Initialization
+void init_IMG_TTF_MIX_NET();
+void initInterfaces(MRenderInterface*, MMouseInterface*, 
+  MJoyconInterface*, MKeyboardInterface*, MGame*);
+void initSound();
+
+// Window
+void initWindow();
+namespace GPE
+{
+  SDL_Window* gWindow;
+  SDL_Renderer* gRenderer;
+}
+
+// Settings
+void initSettings(std::string);
+void loadDefaultSettings();
+namespace GPE
+{
+  int screenWidth;
+  int screenHeight;
+  bool vsync;
+  bool fullscreen;
+  bool resizeable;
+  Uint32 FPS;
+  Uint32 MS_delay;
+  std::string name;
+  Uint32 maxEvents;
+  int musicVolume;
+  int soundVolume;
+}
+
+// Mouse
+void initMouse();
+int x, y;
+int lx, ly;
+int px, py;
+bool ldown, rdown, mdown;
+
+// Renderthread
+void initRenderthread();
+int renderThreadFunc(void*);
+SDL_cond* renderStart;
+SDL_cond* renderFinished;
 SDL_mutex* renderLock;
-SDL_mutex* doneRenderLock;
-MEngine* gEngine = NULL;
-MWindow* gWindow = NULL;
-SDL_Window* gSDLWindow = NULL;
-SDL_Renderer* gSDLRenderer = NULL;
-MMouse* gMouse = NULL;
-int screenWidth = 0;
-int screenHeight = 0;
+SDL_mutex* engineLock;
+SDL_Thread* renderThread;
 
-/*********************************************************************
-  C O N S T R U C T O R / D E S T R U C T O R
- *********************************************************************/
-MEngine::MEngine() {
-  //window = NULL;
-  //mouse = NULL;
-  joycons.clear();
-  renderI = NULL;
-  mouseI = NULL;
-  keyboardI = NULL;
-  joyconI = NULL;
-  running = false;
-  closeLock = 0;
-  FPS = DEFAULT_FPS;
-  FPMS = 1000/FPS;
-  resX = DEFAULT_RESX;
-  resY = DEFAULT_RESY;
-  vsync = false;
-  fullscreen = false;
-  musicVolume = MAX_VOLUME;
-  soundVolume = MAX_VOLUME;
-  renderThread = NULL;
-  gameSwitch = false;
-  gameToSwitchTo = NULL;
-}
+// Events
+void handleEvent(SDL_Event);
+bool handleQuit(SDL_Event);
+bool handleMouse(SDL_Event);
+bool handleKeyboard(SDL_Event);
+bool handleJoycon(SDL_Event);
 
-MEngine::~MEngine() {
+// Run
+void start_1thread_drawthread();
+bool running;
+bool shutdown;
+MRenderInterface* renderI;
+MMouseInterface* mouseI;
+MKeyboardInterface* keyboardI;
+MJoyconInterface* joyconI;
+MGame* game;
 
-}
-
-void MEngine::close() {
-  gWindow->close();
-  delete gWindow;
-  delete gMouse;
-  for(int i = 0; i < joycons.size(); i++) {
-    if(joycons[i] != NULL) {
-      delete joycons[i];
-      joycons[i] = NULL;
-    }
-  }
-  joycons.clear();
-  renderI = NULL;
-  mouseI = NULL;
-  keyboardI = NULL;
-  joyconI = NULL;
-  Mix_Quit();
-  IMG_Quit();
-  SDL_Quit(); 
-}
-
-
-/*********************************************************************
-  R E N D E R  T H R E A D
- *********************************************************************/
-SDL_SpinLock gSDLTextureLock = 0;
-
-int renderThreadFunc(void* data) {
-  SDL_LockMutex(renderLock);
-  do {
-    SDL_CondWait(renderTrigger, renderLock);
-    SDL_AtomicLock(&gSDLTextureLock);
-    //gWindow->draw();
-    gWindow->clear();
-    gEngine->getRenderI()->render();
-    SDL_AtomicUnlock(&gSDLTextureLock);
-
-    /*if(gTextureQueue.size() > 0) {
-      gTextureQueue.lock();
-      MTexture* t = gTextureQueue.popLock();
-      //t->createTexture();
-      gTextureQueue.unlock();
-    }*/
-
-    SDL_LockMutex(doneRenderLock);
-    SDL_CondSignal(doneRenderTrigger);
-    SDL_UnlockMutex(doneRenderLock);
-  } while(gEngine->isRunning());
-  SDL_UnlockMutex(renderLock);
-  return 0;
-}
-
-MQueue<MTexture*> gTextureQueue;
-
-void clearTextureQueue() {
-  gTextureQueue.lock();
-  while(gTextureQueue.sizeLock() > 0) {
-    MTexture* t = gTextureQueue.popLock();
-    //t->createTexture();
-  }
-  gTextureQueue.unlock();
-}
-
-void clearTextureQueue(int num) {
-  gTextureQueue.lock();
-  int n = 0;
-  while(n < num && gTextureQueue.sizeLock() > 0) {
-    MTexture* t = gTextureQueue.popLock();
-    //t->createTexture();
-    n++;
-  }
-  gTextureQueue.unlock();
-}
-
-
-/*********************************************************************
-  I N I T I A L I Z A T I O N
- *********************************************************************/
-void MEngine::init(std::string name, std::string settings,
+//////////////////////////////////
+void GPE::Engine_Init(std::string name, std::string settings,
  MRenderInterface* ri, MMouseInterface* mi, MJoyconInterface* ji,
  MKeyboardInterface* ki, MGame* g) {
-  gEngine = this;
   initSettings(settings);
-  initWindow(name);
-  initLowLevel();
+  initWindow();
+  init_IMG_TTF_MIX_NET();
   initSound();
-  initInterfaces(ri, mi, ji, ki);
-  initJoycons();
   initMouse();
-  initGame(g);
-  initRenderThread();
+  initInterfaces(ri, mi, ji, ki, g);
 }
 
-void MEngine::initWindow(std::string name) {
-  if( SDL_Init( SDL_INIT_VIDEO | 
-      SDL_INIT_JOYSTICK | 
-      SDL_INIT_AUDIO ) < 0 ) { 
-    printf( "SDL could not initialize! SDL_Error: %s\n",
-      SDL_GetError() );
-    exit(-1);
-  }
-  gWindow = new MWindow();
-  if(!gWindow->init(name, resX, resY, vsync, fullscreen)) {
-    exit(-1);
-  }
+void GPE::Engine_Finalize() {
+  SDL_DestroyRenderer(gRenderer);
+  SDL_DestroyWindow(gWindow);
+  SDLNet_Quit();
+  TTF_Quit();
+  IMG_Quit();
+  Mix_Quit();
+  SDL_Quit();
 }
 
-void MEngine::initLowLevel() {
-  if( !( IMG_Init( IMG_INIT_PNG ) & IMG_INIT_PNG ) ) { 
-    printf("SDL_image could not initialize! SDL_image Error: %s\n",
-      IMG_GetError() ); 
-    exit(-1);
-  } 
-  if(TTF_Init() == -1) {
-    printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n",
-      TTF_GetError() ); 
-    exit(-1);
-  }
-  if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0 ) { 
-    printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n",
-      Mix_GetError()); 
-    exit(-1);
-  }
-  if(SDLNet_Init() == -1) {
-    printf("SDLNet_Init: %s\n", SDLNet_GetError());
-    exit(-1);
-  }
+void GPE::Engine_Start() {
+  start_1thread_drawthread();
 }
 
-void MEngine::initInterfaces(MRenderInterface* ri,
- MMouseInterface* mi, MJoyconInterface* ji, MKeyboardInterface* ki) {
-  joyconI = ji;
+void GPE::Engine_swapMouse(MMouseInterface* mi) {
   mouseI = mi;
-  renderI = ri;
-  renderI->init();
+}
+
+void GPE::Engine_swapKeyboard(MKeyboardInterface* ki) {
   keyboardI = ki;
 }
 
-void MEngine::initJoycons() {
-  int numJoycons = getNumJoysticks();
-  joycons.resize(numJoycons);
-  for(int i = 0; i < numJoycons; i++) {
-    joycons[i] = new MJoycon();
-    joycons[i]->init(this, i);
-    joyconI->initJoycon(joycons[i]);
-  }
+void GPE::Engine_swapJoycon(MJoyconInterface* ji) {
+  joyconI = ji;
 }
 
-void MEngine::initMouse() {
-  gMouse = new MMouse();
-  gMouse->init(this);
+void GPE::Engine_swapRenderer(MRenderInterface* ri) {
+  renderI = ri;
 }
 
-void MEngine::initSettings(std::string settings) {
-  if(!loadSettings(settings)) {
-    printf("Failed to load settings: %s\n", settings.c_str());
-    loadDefaultSettings();
-  }
-}
-
-void MEngine::initGame(MGame* g) {
+void GPE::Engine_swapGame(MGame* g) {
   game = g;
-  game->init(screenWidth, screenHeight);
 }
 
-void MEngine::initSound() {
+void GPE::Engine_endGame() {
+  shutdown = true;
+}
+
+void GPE::Engine_pause() { }
+
+void GPE::Engine_pauseUpdate() { }
+
+void GPE::Engine_pauseDraw() { }
+
+void GPE::Engine_unpause() { }
+
+void GPE::Engine_unpauseUpdate() { }
+
+void GPE::Engine_unpauseDraw() { }
+
+void initWindow() {
+  // Get flags based on settings
+  Uint32 windowFlags = 0;
+  Uint32 rendererFlags = 0;
+  if(fullscreen) windowFlags = windowFlags | SDL_WINDOW_FULLSCREEN;
+  if(resizeable) windowFlags = windowFlags | SDL_WINDOW_RESIZABLE;
+  windowFlags = windowFlags | SDL_WINDOW_HIDDEN;
+  if(vsync) rendererFlags = rendererFlags | SDL_RENDERER_PRESENTVSYNC;
+  rendererFlags = rendererFlags | SDL_RENDERER_ACCELERATED;
+
+  // Initialize SDL
+  if( SDL_Init( SDL_INIT_VIDEO    | 
+                SDL_INIT_JOYSTICK | 
+                SDL_INIT_AUDIO      ) < 0 ) { 
+    printf( "Could not initialize engine: %s\n", SDL_GetError() );
+    exit(-1);
+  }
+
+  // Create a new window
+  gWindow = SDL_CreateWindow(name.c_str(),
+   SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+   screenWidth, screenHeight, windowFlags);
+  if(gWindow == NULL) {
+    printf("Window could not be created: %s\n", SDL_GetError());
+    exit(-1);
+  }
+  //SDL_SetWindowMinimumSize(gWindow, screenWidth, screenHeight);
+
+  // Create a new renderer
+  gRenderer = SDL_CreateRenderer(gWindow, -1, rendererFlags);
+  if(gRenderer == NULL) {
+    printf("Renderer could not be created: %s\n", SDL_GetError());
+    exit(-1);
+  }
+}
+
+void init_IMG_TTF_MIX_NET() {
+  if( !( IMG_Init( IMG_INIT_PNG ) & IMG_INIT_PNG ) ) { 
+    printf("Engine could not be initialized: %s\n", IMG_GetError() ); 
+    exit(-1);
+  } 
+  if(TTF_Init() < 0) {
+    printf( "Engine could not be initialized: %s\n", TTF_GetError() ); 
+    exit(-1);
+  }
+  if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0 ) { 
+    printf("Engine could not be initialized: %s\n", Mix_GetError()); 
+    exit(-1);
+  }
+  if(SDLNet_Init() < 0) {
+    printf("Engine could not be initialized: %s\n", SDLNet_GetError());
+    exit(-1);
+  }
+}
+
+void initInterfaces(MRenderInterface* ri, MMouseInterface* mi, 
+  MJoyconInterface* ji, MKeyboardInterface* ki, MGame* g) {
+
+  renderI = ri;
+  mouseI = mi;
+  joyconI = ji;
+  keyboardI = ki;
+  game = g;
+
+  renderI->init(screenWidth, screenHeight, FPS);
+  mouseI->init();
+  joyconI->init();
+  keyboardI->init();
+  game->init(screenWidth, screenHeight, FPS);
+}
+
+void initSettings(std::string settings) {
+  loadDefaultSettings();
+}
+
+void loadDefaultSettings() {
+  screenWidth = 800;
+  screenHeight = 600;
+  vsync = true;
+  fullscreen = false;
+  resizeable = false;
+  FPS = 60;
+  MS_delay = 1000/FPS;
+  name = "GPEngine";
+  maxEvents = 100;
+  musicVolume = 128;
+  soundVolume = 128;
+}
+
+void initSound() {
   Mix_VolumeMusic(musicVolume);
   Mix_Volume(-1, soundVolume);
 }
 
-void MEngine::initRenderThread() {
-  renderTrigger = SDL_CreateCond();
+void initMouse() {
+  x = 0; y = 0;
+  lx = 0; ly = 0;
+  px = 0; py = 0;
+  ldown = false;
+  rdown = false;
+  mdown = false;
+}
+
+void initRenderthread() {
+  renderStart = SDL_CreateCond();
+  renderFinished = SDL_CreateCond();
   renderLock = SDL_CreateMutex();
-  doneRenderTrigger = SDL_CreateCond();
-  doneRenderLock = SDL_CreateMutex();
-  SDL_LockMutex(doneRenderLock);
+  engineLock = SDL_CreateMutex();
+  SDL_LockMutex(engineLock);
   renderThread = SDL_CreateThread(renderThreadFunc,
    "RenderThread", NULL);
 }
 
+int renderThreadFunc(void* data) {
+  SDL_LockMutex(renderLock);
+  do {
+    SDL_CondWait(renderStart, renderLock);
+    SDL_RenderClear(gRenderer);
+    renderI->render();
 
-/*********************************************************************
-  L O A D  S E T T I N G S
- *********************************************************************/
-bool MEngine::loadSettings(std::string settings) {
-  std::ifstream settingsFile;
-  std::string line;
-  settingsFile.open(settings, std::ios::in);
-  if(settingsFile.is_open()) {
-    while(std::getline(settingsFile, line)) {
-      int equals = line.find_first_of("=", 0);
-      if(equals <= 0) continue;
-      std::string command = line.substr(0, equals);
-      std::string val = line.substr(equals+1, line.length());
-      if(command.compare("CRASH") == 0) { 
-        std::string::size_type sz;
-        int crash_report = std::stoi(val, &sz);
-        if(crash_report != 0) {
-          printf("Crash detected, loading default settings.\n");
-          loadDefaultSettings();
-          return true;
-        }
-      } else if(command.compare("FPS") == 0) {
-        std::string::size_type sz;
-        int FPS_num = std::stoi(val, &sz);
-        if(FPS_num <= 0) {
-          printf("FPS is set too low, loaded defaults\n");
-          loadDefaultSettings();
-          return true;
-        } else {
-          FPS = FPS_num;
-          FPS = 1000/FPMS;
-        }
-      } else if(command.compare("RES") == 0) {
-        int x = val.find_first_of("x", 0);
-        if(x <= 0) {
-          printf("Resolution incorrect format, loading defaults\n");
-          loadDefaultSettings();
-          return true;
-        } else {
-          std::string::size_type sz;
-          int v1 = std::stoi(val.substr(0, x), &sz);
-          int v2 = std::stoi(val.substr(x+1, val.length()), &sz);
-          if(v1 < v2 || v1 < DEFAULT_RESX || v2 < DEFAULT_RESY) {
-            printf("%i, %i is not a workable resolution\n", v1, v2);
-            loadDefaultSettings();
-            return true;
-          } else {
-            resX = v1; resY = v2;
-          }
-        } 
-      } else if(command.compare("VSYNC") == 0) {
-        std::string::size_type sz;
-        int vs = std::stoi(val, &sz);
-        if(vs == 0) {
-          vsync = false;
-        } else {
-          vsync = true;
-        }
-      } else if(command.compare("MUSICVOLUME") == 0) {
-        std::string::size_type sz;
-        int s = std::stoi(val, &sz);
-        if(s < MIN_VOLUME || s > MAX_VOLUME) {
-          printf("Volume not possible, loading defaults.\n");
-          loadDefaultSettings();
-          return true;
-        } else {
-          musicVolume = s;
-        }
-      } else if(command.compare("SOUNDVOLUME") == 0) {
-        std::string::size_type sz;
-        int s = std::stoi(val, &sz);
-        if(s < MIN_VOLUME || s > MAX_VOLUME) {
-          printf("Volume not possible, loading defaults.\n");
-          loadDefaultSettings();
-          return true;
-        } else {
-          soundVolume = s;
-        }
-      } else if(command.compare("FULLSCREEN") == 0) {
-        std::string::size_type sz;
-        int fs = std::stoi(val, &sz);
-        if(fs == 0) {
-          fullscreen = false;
-        } else {
-          fullscreen = true;
-        }
-      }
-    }
-    return true;
-  } else {
-    printf("Failed to open %s\n", settings.c_str());
-    return false;
-  }
+    SDL_LockMutex(engineLock);
+    SDL_CondSignal(renderFinished);
+    SDL_UnlockMutex(engineLock);
+  } while(running);
+  SDL_UnlockMutex(renderLock);
+  return 0;
 }
 
-void MEngine::loadDefaultSettings() {
-  FPS = DEFAULT_FPS;
-  FPMS = 1000/FPS;
-  resX = DEFAULT_RESX;
-  resY = DEFAULT_RESY;
-  vsync = false;
-  fullscreen = false;
-  musicVolume = MAX_VOLUME;
-  soundVolume = MAX_VOLUME;
-}
-
-
-/*********************************************************************
-  E V E N T  H A N D L E R S
- *********************************************************************/
-void MEngine::handleEvent(SDL_Event e) {
+void handleEvent(SDL_Event e) {
   if(!handleQuit(e)) {
     if(!handleMouse(e)) {
       if(!handleKeyboard(e)) {
@@ -369,47 +287,62 @@ void MEngine::handleEvent(SDL_Event e) {
   }
 }
 
-bool MEngine::handleQuit(SDL_Event e) {
+bool handleQuit(SDL_Event e) {
   if(e.type == SDL_QUIT) {
-    stop();
+    shutdown = true;
     return true;
   } else {
     return false;
   }
 }
 
-bool MEngine::handleMouse(SDL_Event e) {
+bool handleMouse(SDL_Event e) {
   int x, y;
   if(e.type == SDL_MOUSEMOTION) {
+    px = x; py = y;
     SDL_GetMouseState(&x, &y);
-    gMouse->move(x,y);
+    if(ldown) {
+      mouseI->mouseDrag(lx, ly, px, py, x, y);
+    } else {
+      mouseI->mouseMove(px, py, x, y);
+    }
     return true;
   } else if(e.type == SDL_MOUSEBUTTONDOWN) {
+    px = x; py = y;
     SDL_GetMouseState(&x, &y);
     if(e.button.button == SDL_BUTTON_LEFT) {
-      gMouse->leftClickDown(x,y);
+      lx = x; ly = y;
+      ldown = true;
+      mouseI->leftClickDown(x,y);
     } else if(e.button.button == SDL_BUTTON_RIGHT) {
-      gMouse->rightClickDown(x,y);
+      rdown = true;
+      mouseI->rightClickDown(x,y);
     } else if(e.button.button == SDL_BUTTON_MIDDLE) {
-      gMouse->middleClickDown(x,y);
+      mdown = true;
+      mouseI->middleClickDown(x,y);
     }
     return true;
   } else if(e.type == SDL_MOUSEBUTTONUP) {
+    px = x; py = y;
     SDL_GetMouseState(&x, &y);
     if(e.button.button == SDL_BUTTON_LEFT) {
-      gMouse->leftClickUp(x,y);
+      ldown = false;
+      mouseI->leftClickUp(x,y);
     } else if(e.button.button == SDL_BUTTON_RIGHT) {
-      gMouse->rightClickUp(x,y);
+      rdown = false;
+      mouseI->rightClickUp(x,y);
     } else if(e.button.button == SDL_BUTTON_MIDDLE) {
-      gMouse->middleClickUp(x,y);
+      mdown = false;
+      mouseI->middleClickUp(x,y);
     }
     return true;
   } else if(e.type == SDL_MOUSEWHEEL) {
+    px = x; py = y;
     SDL_GetMouseState(&x, &y);
     if(e.wheel.y > 0) {
-      gMouse->scrollUp(x,y);
+      mouseI->scrollUp(x,y);
     } else if(e.wheel.y < 0) {
-      gMouse->scrollDown(x,y);
+      mouseI->scrollDown(x,y);
     }
     return true;
   } else {
@@ -417,7 +350,7 @@ bool MEngine::handleMouse(SDL_Event e) {
   }
 }
 
-bool MEngine::handleKeyboard(SDL_Event e) {
+bool handleKeyboard(SDL_Event e) {
   if(e.type == SDL_KEYDOWN) { 
     keyboardI->keyPress(e.key.keysym.sym);
     return true;
@@ -429,16 +362,16 @@ bool MEngine::handleKeyboard(SDL_Event e) {
   }
 }
 
-bool MEngine::handleJoycon(SDL_Event e) {
+bool handleJoycon(SDL_Event e) {
   if(e.type == SDL_JOYAXISMOTION) {
     if(e.jaxis.axis == 0) {
-      joycons[e.jaxis.which]->moveLeftX(e.jaxis.value);
+      //joycons[e.jaxis.which]->moveLeftX(e.jaxis.value);
     } else if(e.jaxis.axis == 1) {
-      joycons[e.jaxis.which]->moveLeftY(e.jaxis.value);
+      //joycons[e.jaxis.which]->moveLeftY(e.jaxis.value);
     } else if(e.jaxis.axis == 3) {
-      joycons[e.jaxis.which]->moveRightX(e.jaxis.value);
+      //joycons[e.jaxis.which]->moveRightX(e.jaxis.value);
     } else if(e.jaxis.axis == 4) {
-      joycons[e.jaxis.which]->moveRightY(e.jaxis.value);
+      //joycons[e.jaxis.which]->moveRightY(e.jaxis.value);
     }
     return true;
   } else if(e.type == SDL_JOYBUTTONUP) {
@@ -452,72 +385,49 @@ bool MEngine::handleJoycon(SDL_Event e) {
   }
 }
 
-
-/*********************************************************************
-  M A I N  L O O P
- *********************************************************************/
-void MEngine::start() {
-  SDL_AtomicLock(&closeLock);
+void start_1thread_drawthread() {
   running = true;
-  SDL_AtomicUnlock(&closeLock);
-  
-  gWindow->clear();
-  renderI->render();
-  gWindow->draw();
-  gWindow->show();
+  shutdown = false;
+  initRenderthread();
 
+  SDL_Event e;
+  Uint32 eventsProcessed;
   Uint32 ut, et;
   Uint32 st = SDL_GetTicks();
-  SDL_Event e;
+
+  // Initial Draw
+  SDL_RenderClear(gRenderer);
+  renderI->render();
+  et = SDL_GetTicks();
+  if(et < MS_delay) SDL_Delay(MS_delay-et);
+  SDL_Delay(MS_delay);
+  SDL_RenderPresent(gRenderer);
+  SDL_ShowWindow(gWindow);
+
   while(running) {
     ut = SDL_GetTicks() - st;
-    //printf("FPS=%zu\n", (Uint32) ((1.0*1000)/((double) ut)) );
     st = ut + st;
-    while(SDL_PollEvent(&e) != 0) {
+    eventsProcessed = 0;
+    while(SDL_PollEvent(&e) != 0 && eventsProcessed < maxEvents) {
       handleEvent(e);
+      eventsProcessed++;
     }
     game->update(ut);
     SDL_LockMutex(renderLock);
-    SDL_CondSignal(renderTrigger);
+    SDL_CondSignal(renderStart);
     SDL_UnlockMutex(renderLock);
     game->updateThreaded(ut);
-    SDL_CondWait(doneRenderTrigger, doneRenderLock);
-    contextSwitch();
+    if(shutdown) running = false;
+    SDL_CondWait(renderFinished, engineLock);
     et = SDL_GetTicks() - st;
-    while(et < FPMS && SDL_PollEvent(&e) != 0) {
+    while(et < MS_delay && SDL_PollEvent(&e) != 0) {
       handleEvent(e);
       et = SDL_GetTicks() - st;
     }
-    if(et < FPMS) {
-      SDL_Delay(FPMS-et);
-    }
-    SDL_AtomicLock(&gSDLTextureLock);
-    gWindow->draw();
-    SDL_AtomicUnlock(&gSDLTextureLock);
+    if(et < MS_delay) SDL_Delay(MS_delay-et);
+    SDL_RenderPresent(gRenderer);
   }
-  SDL_UnlockMutex(doneRenderLock);
-}
-
-void MEngine::stop() {
-  SDL_AtomicLock(&closeLock);
-  running = false;
-  SDL_AtomicUnlock(&closeLock);
-}
-
-void MEngine::contextSwitch() {
-  if(gameSwitch) {
-    gameSwitch = false;
-    game = gameToSwitchTo;
-    renderI = game;
-    mouseI = game;
-    keyboardI = game;
-    joyconI = game;
-    gameToSwitchTo = NULL;
-  }
-}
-
-void MEngine::setGame(MGame* g) {
-  gameToSwitchTo = g;
-  gameSwitch = true;
+  game->quit();
+  SDL_UnlockMutex(engineLock);
 }
 
