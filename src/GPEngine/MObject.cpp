@@ -5,6 +5,8 @@
 
 #include "MObject.h"
 
+using namespace GPE;
+
 MObject::MObject() {
   clip = NULL;
   texture = NULL;

@@ -9,6 +9,7 @@ class MKeyboard;
 
 class MKeyboardInterface {
   public:
+    virtual void init(){};
     MKeyboardInterface() { keyboard = NULL; };
     virtual void keyPress(int key) {};
     virtual void keyRelease(int key) {};

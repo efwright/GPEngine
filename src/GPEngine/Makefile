@@ -17,11 +17,9 @@ _DEPS = MMouseInterface.h \
         MRenderInterface.h \
         MKeyboardInterface.h \
         MGame.h \
-        MMouse.h \
         MRect.h \
         MSpriteSheet.h \
         MTexture.h \
-        MWindow.h \
         MJoycon.h \
         MSound.h \
         MMusic.h \
@@ -42,11 +40,9 @@ _DEPS = MMouseInterface.h \
 
 DEPS = $(patsubst %,$(IDIR)/$(DIR)/%,$(_DEPS))
 
-_OBJ = MMouse.o \
-       MSpriteSheet.o \
+_OBJ = MSpriteSheet.o \
        MLargeSpriteSheet.o \
        MTexture.o \
-       MWindow.o \
        MJoycon.o \
        MSound.o \
        MMusic.o \

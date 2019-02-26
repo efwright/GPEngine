@@ -12,6 +12,13 @@
 #include "MFont.h"
 #include "MColor.h"
 
+namespace GPE
+{
+
+class MTexture;
+void destroy_texture(MTexture*);
+MTexture *create_texture_text(std::string, MFont*, MColor);
+
 const SDL_RendererFlip MTEXTURE_NO_FLIP = SDL_FLIP_NONE;
 const SDL_RendererFlip MTEXTURE_HORIZONTAL_FLIP = SDL_FLIP_HORIZONTAL;
 const SDL_RendererFlip MTEXTURE_VERTICAL_FLIP = SDL_FLIP_VERTICAL;
@@ -26,7 +33,7 @@ const SDL_RendererFlip MTEXTURE_VERTICAL_FLIP = SDL_FLIP_VERTICAL;
 */
 
 class MTexture {
-  public:
+  private:
 /*!
  *  The constructor is not currently used for anything other than
  *  creating an instance of MTexture. Then you should load either
@@ -229,6 +236,8 @@ class MTexture {
  */
     bool loadText(std::string text, MFont* font, MColor color);
 
+  public:
+
 //! Render texture to window, top left anchor
 /*!
  *  \param x the x-coordinate to render to (top left default)
@@ -356,6 +365,7 @@ class MTexture {
     int getHeight();
 
   private:
+
     SDL_Texture* texture;
     int width;
     int height;
@@ -363,60 +373,64 @@ class MTexture {
 //! Destroy any existing loaded texture
     void free();
 
+  public:
+    friend MTexture *create_texture(std::string);
+    friend MTexture *create_texture(std::string, Uint8, Uint8, Uint8);
+    friend MTexture *create_texture(std::string, std::string, std::string, int, int);
+    friend MTexture *create_texture(std::string*, int, int, int);
+    friend MTexture *create_texture_scaled(std::string, int, int);
+    friend MTexture *create_texture_scaled(std::string, int);
+    friend MTexture *create_texture_scaled(std::string, double);
+    friend MTexture *create_texture_scaled(std::string, double, double);
+    friend MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, int, int);
+    friend MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, int);
+    friend MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, double);
+    friend MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, double, double);
+    friend MTexture *create_texture_scaled(std::string*, int, int, int, int, int);
+    friend MTexture *create_texture_scaled(std::string*, int, int, int, int);
+    friend MTexture *create_texture_text(std::string, MFont*, MColor);
+    friend void destroy_texture(MTexture*);
+
 };
 
 //! Load surface from path
-SDL_Surface* loadSurface(std::string path);
+//SDL_Surface* loadSurface(std::string path);
 
 //! Resize surface to absolute size
 /*!
  *  Does not destroy source surface
  */
-SDL_Surface* resizeSurface(SDL_Surface* src, int w, int h);
+//SDL_Surface* resizeSurface(SDL_Surface* src, int w, int h);
 
 //! Create texture from surface
-SDL_Texture* createTexture(SDL_Surface* src);
+//SDL_Texture* createTexture(SDL_Surface* src);
 
 //! Create surface using metadata from src and of specified size
-SDL_Surface* createSurface(SDL_Surface* src, int w, int h);
+//SDL_Surface* createSurface(SDL_Surface* src, int w, int h);
 
 //! Convert base/mod/ext to the full path names
-std::string* getPaths(int &size, std::string base,
-                      std::string mod, std::string ext);
+//std::string* getPaths(int &size, std::string base,
+//                      std::string mod, std::string ext);
 
 //! Load all surfaces from array of paths
-SDL_Surface** loadSurfaces(std::string* paths, int numPaths);
+//SDL_Surface** loadSurfaces(std::string* paths, int numPaths);
 
 //! Resize all surfaces from array of surfaces
 /*!
  *  All old surfaces are destroyed and replace with the new
  *  resized ones
  */
-void resizeSurfaces(SDL_Surface** surfaces, int numSurfaces,
-                    int w, int h);
+//void resizeSurfaces(SDL_Surface** surfaces, int numSurfaces,
+//                    int w, int h);
 
 //! Stitch all surfaces together in array of surfaces
-SDL_Surface* stitchSurfaces(SDL_Surface** surfaces, int numSurfaces,
-                            int x, int y);
+//SDL_Surface* stitchSurfaces(SDL_Surface** surfaces, int numSurfaces,
+//                            int x, int y);
 
 //////////////////////////////////////////////////////////////////////
 
-MTexture *create_texture(std::string);
-MTexture *create_texture(std::string, Uint8, Uint8, Uint8);
-MTexture *create_texture(std::string, std::string, std::string, int, int);
-MTexture *create_texture(std::string*, int, int, int);
-MTexture *create_texture_scaled(std::string, int, int);
-MTexture *create_texture_scaled(std::string, int);
-MTexture *create_texture_scaled(std::string, double);
-MTexture *create_texture_scaled(std::string, double, double);
-MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, int, int);
-MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, int);
-MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, double);
-MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, double, double);
-MTexture *create_texture_scaled(std::string*, int, int, int, int, int);
-MTexture *create_texture_scaled(std::string*, int, int, int, int);
-MTexture *create_texture_text(std::string, MFont*, MColor);
-void destroy_texture(MTexture*);
+
+}
 
 #endif
 

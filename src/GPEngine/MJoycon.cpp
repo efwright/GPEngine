@@ -20,11 +20,11 @@ MJoycon::~MJoycon() {
   free();
 }
 
-bool MJoycon::init(MEngine* e) {
-  return init(e, 0);
+bool MJoycon::init() {
+  return init(0);
 }
 
-bool MJoycon::init(MEngine* e, int j) {
+bool MJoycon::init(int j) {
   free();
   joystick = SDL_JoystickOpen(j);
   if(joystick == NULL) {
@@ -32,7 +32,6 @@ bool MJoycon::init(MEngine* e, int j) {
       SDL_GetError());
   } else {
     joyconNum = j;
-    engine = e;
     numButtons = SDL_JoystickNumButtons(joystick);
   }
   return joystick != NULL;
@@ -45,7 +44,6 @@ void MJoycon::free() {
   }
   joyconNum = 0;
   numButtons = 0;
-  engine = NULL;
 }
 
 void MJoycon::close() {
@@ -58,25 +56,25 @@ int MJoycon::getNum() {
 
 void MJoycon::moveLeftX(int x) {
   if(abs(x)-JOYSTICK_DEAD_ZONE) {
-    engine->getJoyconI()->joyconX(x, joyconNum);
+    //engine->getJoyconI()->joyconX(x, joyconNum);
   }
 }
 
 void MJoycon::moveLeftY(int y) {
   if(abs(y)-JOYSTICK_DEAD_ZONE) {
-    engine->getJoyconI()->joyconY(y, joyconNum);
+    //engine->getJoyconI()->joyconY(y, joyconNum);
   }
 }
 
 void MJoycon::moveRightX(int x) {
   if(abs(x)-JOYSTICK_DEAD_ZONE) {
-    engine->getJoyconI()->joyconRX(x, joyconNum);
+    //engine->getJoyconI()->joyconRX(x, joyconNum);
   }
 }
 
 void MJoycon::moveRightY(int y) {
   if(abs(y)-JOYSTICK_DEAD_ZONE) {
-    engine->getJoyconI()->joyconRY(y, joyconNum);
+    //engine->getJoyconI()->joyconRY(y, joyconNum);
   }
 }
 

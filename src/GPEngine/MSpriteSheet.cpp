@@ -9,6 +9,8 @@
 #include "MRect.h"
 #include "MWindow.h"
 
+using namespace GPE;
+
 MSpriteSheet::MSpriteSheet() {
   texture = NULL;
   numSprites = 0;
