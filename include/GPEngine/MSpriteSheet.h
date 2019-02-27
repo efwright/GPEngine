@@ -11,17 +11,25 @@
 #include "MTexture.h"
 #include "MRect.h"
 
-using namespace GPE;
-
 //! Organize MTexture as a group of sprites
 
+
+namespace GPE
+{
+
+class MSpriteSheet;
+MSpriteSheet* create_spritesheet(GPE::MTexture*, int, int, int);
+MSpriteSheet* create_spritesheet(GPE::MTexture*, MRect*, int);
+MSpriteSheet* create_spritesheet(GPE::MTexture*, std::vector<MRect>);
+
 class MSpriteSheet {
-  public:
+  protected:
     MSpriteSheet();
     ~MSpriteSheet();
     virtual void init(MTexture* texture, int x, int y, int ns);
     virtual void init(MTexture* texture, MRect*, int);
     virtual void init(MTexture* texture, std::vector<MRect>);
+  public:
     virtual void render( int x, int y,
       int sprite, MRect* resize = NULL);
     virtual void renderCentered( int x, int y,
@@ -54,7 +62,15 @@ class MSpriteSheet {
     int textureWidth;
     int textureHeight;
     virtual void free();
+
+  public:
+    friend MSpriteSheet* create_spritesheet(MTexture*, int, int, int);
+    friend MSpriteSheet* create_spritesheet(MTexture*, MRect*, int);
+    friend MSpriteSheet* create_spritesheet(MTexture*, std::vector<MRect>);
+      
 };
+
+}
 
 #endif
 

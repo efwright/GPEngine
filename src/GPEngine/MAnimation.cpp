@@ -7,7 +7,9 @@
 #include "MSpriteSheet.h"
 #include "MAnimation.h"
 
-MAnimation::MAnimation() {
+using namespace GPE;
+
+GPE::MAnimation::MAnimation() {
   spriteSheet = NULL;
   numSprites = 0;
   FPS = 60;
@@ -17,7 +19,7 @@ MAnimation::MAnimation() {
   spriteOrder.clear();
 }
 
-MAnimation::~MAnimation() { 
+GPE::MAnimation::~MAnimation() { 
   spriteSheet = NULL;
   numSprites = 0;
   currentSprite = 0;
@@ -25,7 +27,7 @@ MAnimation::~MAnimation() {
   spriteOrder.clear();
 }
 
-void MAnimation::init(MSpriteSheet* ss, int fps) {
+void GPE::MAnimation::init(GPE::MSpriteSheet* ss, int fps) {
   FPS = fps;
   FPMS = 1000/((long) FPS);
   numSprites = ss->getNumSprites();
@@ -38,7 +40,7 @@ void MAnimation::init(MSpriteSheet* ss, int fps) {
   currentTime = 0;
 }
 
-void MAnimation::init(MSpriteSheet* ss, int fps, std::vector<int> so) {
+void GPE::MAnimation::init(GPE::MSpriteSheet* ss, int fps, std::vector<int> so) {
   FPS = fps;
   FPMS = 1000/((long) FPS);
   numSprites = so.size();
@@ -51,7 +53,7 @@ void MAnimation::init(MSpriteSheet* ss, int fps, std::vector<int> so) {
   currentTime = 0;
 }
 
-void MAnimation::init(MSpriteSheet* ss, int fps, int start, int end) { // end inclusive
+void GPE::MAnimation::init(GPE::MSpriteSheet* ss, int fps, int start, int end) { // end inclusive
   FPS = fps;
   FPMS = 1000/((long) FPS);
   numSprites = end-start+1;
@@ -64,23 +66,23 @@ void MAnimation::init(MSpriteSheet* ss, int fps, int start, int end) { // end in
   currentTime = 0;
 }
 
-void MAnimation::render( int x, int y) {
+void GPE::MAnimation::render( int x, int y) {
   spriteSheet->render( x, y, spriteOrder[currentSprite]);
 }
 
-void MAnimation::renderCentered( int x, int y) {
+void GPE::MAnimation::renderCentered( int x, int y) {
   spriteSheet->renderCentered( x, y, spriteOrder[currentSprite]);
 }
 
-void MAnimation::renderBottomRight( int x, int y) {
+void GPE::MAnimation::renderBottomRight( int x, int y) {
   spriteSheet->renderBottomRight( x, y, spriteOrder[currentSprite]);
 }
 
-void MAnimation::update() {
+void GPE::MAnimation::update() {
   currentSprite = (currentSprite+1) % numSprites;
 }
 
-void MAnimation::update(long et) {
+void GPE::MAnimation::update(long et) {
   currentTime += et;
   if(currentTime >= FPMS) {
     currentTime = currentTime % FPMS;
@@ -88,7 +90,7 @@ void MAnimation::update(long et) {
   }
 }
 
-void MAnimation::updateNoRepeat(long et) {
+void GPE::MAnimation::updateNoRepeat(long et) {
   currentTime += et;
   if(currentTime >= FPMS) {
     currentTime = currentTime % FPMS;
@@ -97,11 +99,31 @@ void MAnimation::updateNoRepeat(long et) {
   }
 }
 
-void MAnimation::update(long et, bool repeat) {
+void GPE::MAnimation::update(long et, bool repeat) {
   if(repeat) {
     update(et);
   } else {
     updateNoRepeat(et);
   }
+}
+
+GPE::MAnimation *GPE::create_animation(GPE::MSpriteSheet* ss, int fps) {
+  GPE::MAnimation *tmp = new GPE::MAnimation();
+  tmp->init(ss, fps);
+  return tmp;
+}
+
+GPE::MAnimation *GPE::create_animation(GPE::MSpriteSheet* ss, int fps,
+      std::vector<int> order) {
+  GPE::MAnimation *tmp = new GPE::MAnimation();
+  tmp->init(ss, fps, order);
+  return tmp;
+}
+
+GPE::MAnimation *GPE::create_animation(GPE::MSpriteSheet* ss, int fps,
+      int start, int end) {
+  GPE::MAnimation *tmp = new GPE::MAnimation();
+  tmp->init(ss, fps, start, end);
+  return tmp;
 }
 

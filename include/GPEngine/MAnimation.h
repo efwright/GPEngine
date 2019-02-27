@@ -20,8 +20,16 @@
  *  int, int) will render it to the screen.
  */
 
+namespace GPE
+{
+
+class MAnimation;
+MAnimation *create_animation(GPE::MSpriteSheet*, int);
+MAnimation *create_animation(GPE::MSpriteSheet*, int, std::vector<int>);
+MAnimation *create_animation(GPE::MSpriteSheet*, int, int, int);
+
 class MAnimation {
-  public:
+  protected:
 /*!
     The constuctor is currently not use for anything other than
     creating an instance of MAnimation. You can create a new instance
@@ -44,7 +52,7 @@ class MAnimation {
   \sa init(MSpriteSheet*, int, std::vector<int>)
   \sa init(MSpriteSheet*, int, int, int)
 */
-    void init(MSpriteSheet* newSpriteSheet, int fps);
+    void init(GPE::MSpriteSheet* newSpriteSheet, int fps);
 
 //! Initialize the animation with the specified sprite order
 /*!
@@ -54,7 +62,7 @@ class MAnimation {
   \sa init(MSpriteSheet*, int)
   \sa init(MSpriteSheet*, int, int, int)
 */
-    void init(MSpriteSheet* newSpriteSheet, int fps, std::vector<int> useSpriteOrder);
+    void init(GPE::MSpriteSheet* newSpriteSheet, int fps, std::vector<int> useSpriteOrder);
 
 //! Initialize the animation using subset of sprites
 /*!
@@ -65,7 +73,9 @@ class MAnimation {
   \sa init(MSpriteSheet*, int)
   \sa init(MSpriteSheet*, int, std::vector<int>)
 */
-    void init(MSpriteSheet* newSpriteSheet, int fps, int start, int end);
+    void init(GPE::MSpriteSheet* newSpriteSheet, int fps, int start, int end);
+
+  public:
 
 //! Render the current sprite at position x,y (using top left of sprite for anchor)
 /*!
@@ -115,9 +125,9 @@ class MAnimation {
 //! Update animation with specified repeat
     void update(long et, bool repeat);
 
-  private:
+  protected:
 //! Underlying spritesheet
-    MSpriteSheet* spriteSheet;
+    GPE::MSpriteSheet* spriteSheet;
 
 //! The ordering that sprites appear in the animation
 /*!
@@ -144,7 +154,15 @@ class MAnimation {
 //! Current time elapsed, use to update currentSprite
     long currentTime;
 
+  public:
+    friend MAnimation *create_animation(GPE::MSpriteSheet*, int);
+    friend MAnimation *create_animation(GPE::MSpriteSheet*, int,
+      std::vector<int>);
+    friend MAnimation *create_animation(GPE::MSpriteSheet*, int, int, int);
+
 };
+
+}
 
 #endif
 

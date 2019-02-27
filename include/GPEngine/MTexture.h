@@ -16,8 +16,23 @@ namespace GPE
 {
 
 class MTexture;
-void destroy_texture(MTexture*);
+MTexture *create_texture(std::string);
+MTexture *create_texture(std::string, Uint8, Uint8, Uint8);
+MTexture *create_texture(std::string, std::string, std::string, int, int);
+MTexture *create_texture(std::string*, int, int, int);
+MTexture *create_texture_scaled(std::string, int, int);
+MTexture *create_texture_scaled(std::string, int);
+MTexture *create_texture_scaled(std::string, double);
+MTexture *create_texture_scaled(std::string, double, double);
+MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, int, int);
+MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, int);
+MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, double);
+MTexture *create_texture_scaled(std::string, std::string, std::string, int, int, double, double);
+MTexture *create_texture_scaled(std::string*, int, int, int, int, int);
+MTexture *create_texture_scaled(std::string*, int, int, int, int);
 MTexture *create_texture_text(std::string, MFont*, MColor);
+void destroy_texture(MTexture*);
+
 
 const SDL_RendererFlip MTEXTURE_NO_FLIP = SDL_FLIP_NONE;
 const SDL_RendererFlip MTEXTURE_HORIZONTAL_FLIP = SDL_FLIP_HORIZONTAL;

@@ -9,8 +9,8 @@
 
 class MRenderInterface {
   public:
-    virtual void init(int, int, unsigned int) {};
-    virtual void render() {};
+    virtual void initRender(int, int, unsigned int) {};
+    virtual void render(Uint32) {};
   private:
 };
 

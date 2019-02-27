@@ -84,6 +84,7 @@ MMouseInterface* mouseI;
 MKeyboardInterface* keyboardI;
 MJoyconInterface* joyconI;
 MGame* game;
+Uint32 ut, et, st;
 
 //////////////////////////////////
 void GPE::Engine_Init(std::string name, std::string settings,
@@ -211,11 +212,11 @@ void initInterfaces(MRenderInterface* ri, MMouseInterface* mi,
   keyboardI = ki;
   game = g;
 
-  renderI->init(screenWidth, screenHeight, FPS);
+  renderI->initRender(screenWidth, screenHeight, FPS);
   mouseI->init();
   joyconI->init();
   keyboardI->init();
-  game->init(screenWidth, screenHeight, FPS);
+  game->initGame(screenWidth, screenHeight, FPS);
 }
 
 void initSettings(std::string settings) {
@@ -265,7 +266,7 @@ int renderThreadFunc(void* data) {
   do {
     SDL_CondWait(renderStart, renderLock);
     SDL_RenderClear(gRenderer);
-    renderI->render();
+    renderI->render(ut);
 
     SDL_LockMutex(engineLock);
     SDL_CondSignal(renderFinished);
@@ -392,12 +393,11 @@ void start_1thread_drawthread() {
 
   SDL_Event e;
   Uint32 eventsProcessed;
-  Uint32 ut, et;
-  Uint32 st = SDL_GetTicks();
+  st = SDL_GetTicks();
 
   // Initial Draw
   SDL_RenderClear(gRenderer);
-  renderI->render();
+  renderI->render(ut);
   et = SDL_GetTicks();
   if(et < MS_delay) SDL_Delay(MS_delay-et);
   SDL_Delay(MS_delay);

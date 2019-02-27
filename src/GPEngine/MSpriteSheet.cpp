@@ -11,7 +11,7 @@
 
 using namespace GPE;
 
-MSpriteSheet::MSpriteSheet() {
+GPE::MSpriteSheet::MSpriteSheet() {
   texture = NULL;
   numSprites = 0;
   numSpritesX = 0;
@@ -22,11 +22,11 @@ MSpriteSheet::MSpriteSheet() {
   textureHeight = 0;
 }
 
-MSpriteSheet::~MSpriteSheet() {
+GPE::MSpriteSheet::~MSpriteSheet() {
   free();
 }
 
-void MSpriteSheet::free() {
+void GPE::MSpriteSheet::free() {
   texture = NULL;
   numSprites = 0;
   numSpritesX = 0;
@@ -38,7 +38,7 @@ void MSpriteSheet::free() {
   rects.clear();
 }
 
-void MSpriteSheet::init(MTexture* _texture, int x, int y, int ns) {
+void GPE::MSpriteSheet::init(MTexture* _texture, int x, int y, int ns) {
   free();
   texture = _texture;
   numSprites = ns;
@@ -60,7 +60,7 @@ void MSpriteSheet::init(MTexture* _texture, int x, int y, int ns) {
   }
 }
 
-void MSpriteSheet::init(MTexture* _texture, MRect* _rects, int ns) {
+void GPE::MSpriteSheet::init(MTexture* _texture, MRect* _rects, int ns) {
   free();
   texture = _texture;
   numSprites = ns;
@@ -80,12 +80,12 @@ void MSpriteSheet::init(MTexture* _texture, MRect* _rects, int ns) {
   }
 }
 
-void MSpriteSheet::init(MTexture* _texture, std::vector<MRect> _rects)
+void GPE::MSpriteSheet::init(MTexture* _texture, std::vector<MRect> _rects)
 {
   init(_texture, _rects.data(), _rects.size());
 }
 
-void MSpriteSheet::render( int x, int y,
+void GPE::MSpriteSheet::render( int x, int y,
                           int sprite, MRect* resize) 
 {
   if(sprite >= numSprites) {
@@ -94,7 +94,7 @@ void MSpriteSheet::render( int x, int y,
   texture->render( x, y, &rects[sprite], resize);
 } 
 
-void MSpriteSheet::renderCentered( int x, int y,
+void GPE::MSpriteSheet::renderCentered( int x, int y,
                           int sprite, MRect* resize) 
 {
   if(sprite >= numSprites) {
@@ -103,7 +103,7 @@ void MSpriteSheet::renderCentered( int x, int y,
   texture->renderCentered( x, y, &rects[sprite], resize);
 } 
 
-void MSpriteSheet::renderBottomLeft( int x, int y,
+void GPE::MSpriteSheet::renderBottomLeft( int x, int y,
                           int sprite, MRect* resize) 
 {
   if(sprite >= numSprites) {
@@ -112,7 +112,7 @@ void MSpriteSheet::renderBottomLeft( int x, int y,
   texture->renderBottomLeft( x, y, &rects[sprite], resize);
 } 
 
-void MSpriteSheet::renderBottomRight( int x, int y,
+void GPE::MSpriteSheet::renderBottomRight( int x, int y,
                           int sprite, MRect* resize) 
 {
   if(sprite >= numSprites) {
@@ -121,7 +121,7 @@ void MSpriteSheet::renderBottomRight( int x, int y,
   texture->renderBottomRight( x, y, &rects[sprite], resize);
 } 
 
-void MSpriteSheet::renderTopRight( int x, int y,
+void GPE::MSpriteSheet::renderTopRight( int x, int y,
                           int sprite, MRect* resize) 
 {
   if(sprite >= numSprites) {
@@ -130,7 +130,7 @@ void MSpriteSheet::renderTopRight( int x, int y,
   texture->renderTopRight( x, y, &rects[sprite], resize);
 } 
 
-void MSpriteSheet::render( int x, int y,
+void GPE::MSpriteSheet::render( int x, int y,
                           int anchorX, int anchorY,
                           int sprite, MRect* resize) 
 {
@@ -141,7 +141,7 @@ void MSpriteSheet::render( int x, int y,
                           &rects[sprite], resize);
 } 
 
-void MSpriteSheet::renderAnchored( int x, int y,
+void GPE::MSpriteSheet::renderAnchored( int x, int y,
                           int anchorX, int anchorY,
                           int sprite, MRect* resize) 
 {
@@ -152,23 +152,41 @@ void MSpriteSheet::renderAnchored( int x, int y,
                           &rects[sprite], resize);
 } 
 
-int MSpriteSheet::getWidth() {
+int GPE::MSpriteSheet::getWidth() {
   return textureWidth;
 }
 
-int MSpriteSheet::getWidth(int sprite) {
+int GPE::MSpriteSheet::getWidth(int sprite) {
   return rects[sprite].w;
 }
 
-int MSpriteSheet::getHeight() {
+int GPE::MSpriteSheet::getHeight() {
   return textureHeight;
 }
 
-int MSpriteSheet::getHeight(int sprite) {
+int GPE::MSpriteSheet::getHeight(int sprite) {
   return rects[sprite].h;
 }
 
-int MSpriteSheet::getNumSprites() {
+int GPE::MSpriteSheet::getNumSprites() {
   return numSprites;
+}
+
+GPE::MSpriteSheet* GPE::create_spritesheet(MTexture* texture, int x, int y, int ns) {
+  GPE::MSpriteSheet *tmp = new GPE::MSpriteSheet();
+  tmp->init(texture, x, y, ns);
+  return tmp;
+}
+
+GPE::MSpriteSheet* GPE::create_spritesheet(MTexture* texture, MRect* rects, int ns) {
+  GPE::MSpriteSheet *tmp = new GPE::MSpriteSheet();
+  tmp->init(texture, rects, ns);
+  return tmp;
+}
+
+GPE::MSpriteSheet* GPE::create_spritesheet(MTexture* texture, std::vector<MRect> rects) {
+  GPE::MSpriteSheet *tmp = new GPE::MSpriteSheet();
+  tmp->init(texture, rects);
+  return tmp;
 }
 

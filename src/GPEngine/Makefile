@@ -31,7 +31,6 @@ _DEPS = MMouseInterface.h \
         MEngine.h \
         MObject.h \
         MQueue.h \
-        MLargeSpriteSheet.h \
         MHitbox.h \
         $(NETWORKDIR)/MPacket.h \
         $(NETWORKDIR)/MUDPSocket.h \
@@ -41,7 +40,6 @@ _DEPS = MMouseInterface.h \
 DEPS = $(patsubst %,$(IDIR)/$(DIR)/%,$(_DEPS))
 
 _OBJ = MSpriteSheet.o \
-       MLargeSpriteSheet.o \
        MTexture.o \
        MJoycon.o \
        MSound.o \

@@ -10,7 +10,6 @@
 #include "GPEngine/MHitbox.h"
 #include "GPEngine/MJoyconInterface.h"
 #include "GPEngine/MKeyboardInterface.h"
-#include "GPEngine/MLargeSpriteSheet.h"
 #include "GPEngine/MMouseInterface.h"
 #include "GPEngine/MMusic.h"
 #include "GPEngine/MObject.h"
@@ -21,6 +20,7 @@
 #include "GPEngine/MSpriteSheet.h"
 #include "GPEngine/MText.h"
 #include "GPEngine/MThread.h"
+#include "GPEngine/MTexture.h"
 
 #endif
 
