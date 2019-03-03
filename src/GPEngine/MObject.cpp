@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-#include "MRect.h"
 #include "MTexture.h"
 
 #include "MObject.h"
@@ -25,8 +24,8 @@ MObject::~MObject() {
 
 void MObject::init(MTexture* _texture, int x, int y) {
   texture = _texture;
-  position = new MRect(x, y,
-    texture->getWidth(), texture->getHeight());
+  position = {x, y,
+    texture->getWidth(), texture->getHeight() };
   clip = NULL;
 }
 

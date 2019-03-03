@@ -12,7 +12,6 @@
 #include "GPEngine/MKeyboardInterface.h"
 #include "GPEngine/MMouseInterface.h"
 #include "GPEngine/MMusic.h"
-#include "GPEngine/MObject.h"
 #include "GPEngine/MRect.h"
 #include "GPEngine/MRenderInterface.h"
 #include "GPEngine/MRoom.h"

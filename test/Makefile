@@ -1,4 +1,4 @@
-.PHONY: test1 test2
+.PHONY: test1 test2 test3
 
 test1:
 	make -C ./test1
@@ -7,3 +7,8 @@ test1:
 test2:
 	make -C ./test2
 	make clean -C ./test2
+
+test3:
+	make -C ./test3
+	make clean -C ./test3
+

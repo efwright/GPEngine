@@ -19,54 +19,53 @@ namespace GPE
 
 class MSpriteSheet;
 MSpriteSheet* create_spritesheet(GPE::MTexture*, int, int, int);
-MSpriteSheet* create_spritesheet(GPE::MTexture*, MRect*, int);
-MSpriteSheet* create_spritesheet(GPE::MTexture*, std::vector<MRect>);
+MSpriteSheet* create_spritesheet(GPE::MTexture*, GPRect*, int);
+MSpriteSheet* create_spritesheet(GPE::MTexture*, std::vector<GPRect>);
 
 class MSpriteSheet {
   protected:
     MSpriteSheet();
     ~MSpriteSheet();
-    virtual void init(MTexture* texture, int x, int y, int ns);
-    virtual void init(MTexture* texture, MRect*, int);
-    virtual void init(MTexture* texture, std::vector<MRect>);
+    void init(MTexture* texture, int x, int y, int ns);
+    void init(MTexture* texture, GPRect*, int);
+    void init(MTexture* texture, std::vector<GPRect>);
   public:
-    virtual void render( int x, int y,
-      int sprite, MRect* resize = NULL);
-    virtual void renderCentered( int x, int y,
-      int sprite, MRect* resize = NULL);
-    virtual void renderBottomLeft( int x, int y,
-      int sprite, MRect* resize = NULL);
-    virtual void renderBottomRight( int x, int y,
-      int sprite, MRect* resize = NULL);
-    virtual void renderTopRight( int x, int y,
-      int sprite, MRect* resize = NULL);
-    virtual void render( int x, int y,
-      int anchorX, int anchorY, int sprite, MRect* resize = NULL);
-    virtual void renderAnchored( int x, int y,
-      int anchorX, int anchorY, int sprite, MRect* resize = NULL);
 
+    void render(int x, int y, int sprite);
+    void render(int x, int y, int sprite, int anchorX, int anchorY);
+    void renderCentered(int x, int y, int sprite);
+    void renderBottomRight(int x, int y, int sprite);
+    void renderBottomleft(int x, int y, int sprite);
+    void renderTopRight(int x, int y, int sprite);
 
-    virtual int getWidth();
-    virtual int getWidth(int sprite);
-    virtual int getHeight();
-    virtual int getHeight(int sprite);
-    virtual int getNumSprites();
+    void renderResized(int x, int y, int sprite, GPRect resize);
+    void renderResized(int x, int y, int sprite, GPRect resize, int anchorX, int anchorY);
+    void renderResizedCentered(int x, int y, int sprite, GPRect resize);
+    void renderResizedBottomRight(int x, int y, int sprite, GPRect resize);
+    void renderResizedBottomleft(int x, int y, int sprite, GPRect resize);
+    void renderResizedTopRight(int x, int y, int sprite, GPRect resize);
+
+    int getWidth();
+    int getWidth(int sprite);
+    int getHeight();
+    int getHeight(int sprite);
+    int getNumSprites();
   protected:
     MTexture* texture;
     int numSprites;
-    std::vector<MRect> rects;
+    std::vector<GPRect> rects;
     int numSpritesX;
     int numSpritesY;
     int spriteWidth;
     int spriteHeight;
     int textureWidth;
     int textureHeight;
-    virtual void free();
+    void free();
 
   public:
     friend MSpriteSheet* create_spritesheet(MTexture*, int, int, int);
-    friend MSpriteSheet* create_spritesheet(MTexture*, MRect*, int);
-    friend MSpriteSheet* create_spritesheet(MTexture*, std::vector<MRect>);
+    friend MSpriteSheet* create_spritesheet(MTexture*, GPRect*, int);
+    friend MSpriteSheet* create_spritesheet(MTexture*, std::vector<GPRect>);
       
 };
 

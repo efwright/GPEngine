@@ -4,21 +4,25 @@
 
 using namespace GPE;
 
-GPE::MTexture *cat;
-
-class Test2Game : public MGame {
+class Test3Game : public MGame {
   public:
   long timePassed;
+  GPE::MTexture* loading;
+  GPE::MSpriteSheet* loadingS;
+  GPE::MAnimation* loadingA;
 
-  Test2Game() { timePassed = 0L; };
+  Test3Game() { timePassed = 0L; };
 
   void initRender(int x, int y, unsigned int f) override {
     printf("Game is initializing\n");
-    cat = GPE::create_texture("cat.png");
+    loading = GPE::create_texture("images/load-00", "47", ".png",
+      5, 10);
+    loadingS = GPE::create_spritesheet(loading, 5, 10, 48);
+    loadingA = GPE::create_animation(loadingS, 30);
   }
 
   void render(unsigned int ut) override {
-    cat->render(GPE::screenWidth/2 - cat->getWidth()/2, GPE::screenHeight/2 - cat->getHeight()/2);
+    loadingA->render(0,0);
   }
 
   void update(long et) {
@@ -27,23 +31,23 @@ class Test2Game : public MGame {
       printf("Stopping GPEngine\n");
       GPE::Engine_endGame();
     }
+    loadingA->update(et);
   }
 
   void quit() {
     printf("Game is quitting.\n");
-    GPE::destroy_texture(cat);
   }
 
 };
 
 int main() {
-  printf("Running test2...\n");
+  printf("Running test1...\n");
 
   printf("Initializing GPEngine\n");
 
-  Test2Game *g = new Test2Game();
+  Test3Game *g = new Test3Game();
 
-  GPE::Engine_Init("Test2", "", g, g, g, g, g);
+  GPE::Engine_Init("Test3", "", g, g, g, g, g);
 
   printf("Starting GPEngine\n");
 
@@ -54,6 +58,6 @@ int main() {
   GPE::Engine_Finalize();
 
 
-  printf("Finished test2\n");
+  printf("Finished test3\n");
   return 0;
 }

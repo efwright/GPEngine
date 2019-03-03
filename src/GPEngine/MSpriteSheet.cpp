@@ -6,8 +6,6 @@
 
 #include "MTexture.h"
 #include "MSpriteSheet.h"
-#include "MRect.h"
-#include "MWindow.h"
 
 using namespace GPE;
 
@@ -50,9 +48,9 @@ void GPE::MSpriteSheet::init(MTexture* _texture, int x, int y, int ns) {
   spriteHeight = textureHeight / numSpritesY;
   rects.resize(numSprites);
   for(int i = 0; i < numSprites; i++) {
-    rects[i] = MRect((i%numSpritesX)*spriteWidth,
-                     (i/numSpritesX)*spriteHeight,
-                     spriteWidth, spriteHeight);
+    rects[i] = {(i%numSpritesX)*spriteWidth,
+                (i/numSpritesX)*spriteHeight,
+                spriteWidth, spriteHeight    };
   }
   if(textureWidth % numSpritesX != 0 ||
      textureHeight % numSpritesY != 0) {
@@ -60,7 +58,7 @@ void GPE::MSpriteSheet::init(MTexture* _texture, int x, int y, int ns) {
   }
 }
 
-void GPE::MSpriteSheet::init(MTexture* _texture, MRect* _rects, int ns) {
+void GPE::MSpriteSheet::init(MTexture* _texture, GPRect* _rects, int ns) {
   free();
   texture = _texture;
   numSprites = ns;
@@ -80,77 +78,96 @@ void GPE::MSpriteSheet::init(MTexture* _texture, MRect* _rects, int ns) {
   }
 }
 
-void GPE::MSpriteSheet::init(MTexture* _texture, std::vector<MRect> _rects)
+void GPE::MSpriteSheet::init(MTexture* _texture, std::vector<GPRect> _rects)
 {
   init(_texture, _rects.data(), _rects.size());
 }
 
-void GPE::MSpriteSheet::render( int x, int y,
-                          int sprite, MRect* resize) 
-{
+void GPE::MSpriteSheet::render(int x, int y, int sprite) {
   if(sprite >= numSprites) {
     printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
   }
-  texture->render( x, y, &rects[sprite], resize);
-} 
+  texture->render(x,y,rects[sprite]);
+}
 
-void GPE::MSpriteSheet::renderCentered( int x, int y,
-                          int sprite, MRect* resize) 
-{
+void GPE::MSpriteSheet::render(int x, int y, int sprite, int anchorX, int anchorY) {
   if(sprite >= numSprites) {
     printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
   }
-  texture->renderCentered( x, y, &rects[sprite], resize);
-} 
+  texture->render(x,y,rects[sprite],anchorX,anchorY);
+}
 
-void GPE::MSpriteSheet::renderBottomLeft( int x, int y,
-                          int sprite, MRect* resize) 
-{
+void GPE::MSpriteSheet::renderCentered(int x, int y, int sprite) {
   if(sprite >= numSprites) {
     printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
   }
-  texture->renderBottomLeft( x, y, &rects[sprite], resize);
-} 
+  texture->renderCentered(x,y,rects[sprite]);
+}
 
-void GPE::MSpriteSheet::renderBottomRight( int x, int y,
-                          int sprite, MRect* resize) 
-{
+void GPE::MSpriteSheet::renderBottomRight(int x, int y, int sprite) {
   if(sprite >= numSprites) {
     printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
   }
-  texture->renderBottomRight( x, y, &rects[sprite], resize);
-} 
+  texture->renderBottomRight(x,y,rects[sprite]);
+}
 
-void GPE::MSpriteSheet::renderTopRight( int x, int y,
-                          int sprite, MRect* resize) 
-{
+void GPE::MSpriteSheet::renderBottomleft(int x, int y, int sprite) {
   if(sprite >= numSprites) {
     printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
   }
-  texture->renderTopRight( x, y, &rects[sprite], resize);
-} 
+  texture->renderBottomLeft(x,y,rects[sprite]);
+}
 
-void GPE::MSpriteSheet::render( int x, int y,
-                          int anchorX, int anchorY,
-                          int sprite, MRect* resize) 
-{
+void GPE::MSpriteSheet::renderTopRight(int x, int y, int sprite) {
   if(sprite >= numSprites) {
     printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
   }
-  texture->render( x, y, anchorX, anchorY, 
-                          &rects[sprite], resize);
-} 
+  texture->renderTopRight(x,y,rects[sprite]);
+}
 
-void GPE::MSpriteSheet::renderAnchored( int x, int y,
-                          int anchorX, int anchorY,
-                          int sprite, MRect* resize) 
-{
+
+
+void GPE::MSpriteSheet::renderResized(int x, int y, int sprite, GPRect resize) {
   if(sprite >= numSprites) {
     printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
   }
-  texture->renderAnchored( x, y, anchorX, anchorY, 
-                          &rects[sprite], resize);
-} 
+  texture->renderResized(x,y,rects[sprite],resize);
+}
+
+void GPE::MSpriteSheet::renderResized(int x, int y, int sprite, GPRect resize, int anchorX, int anchorY) {
+  if(sprite >= numSprites) {
+    printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
+  }
+  texture->renderResized(x,y,rects[sprite],resize,anchorX,anchorY);
+}
+
+void GPE::MSpriteSheet::renderResizedCentered(int x, int y, int sprite, GPRect resize) {
+  if(sprite >= numSprites) {
+    printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
+  }
+  texture->renderResizedCentered(x,y,rects[sprite],resize);
+}
+
+void GPE::MSpriteSheet::renderResizedBottomRight(int x, int y, int sprite, GPRect resize) {
+  if(sprite >= numSprites) {
+    printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
+  }
+  texture->renderResizedBottomRight(x,y,rects[sprite],resize);
+}
+
+void GPE::MSpriteSheet::renderResizedBottomleft(int x, int y, int sprite, GPRect resize) {
+  if(sprite >= numSprites) {
+    printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
+  }
+  texture->renderResizedBottomLeft(x,y,rects[sprite],resize);
+}
+
+void GPE::MSpriteSheet::renderResizedTopRight(int x, int y, int sprite, GPRect resize) {
+  if(sprite >= numSprites) {
+    printf("Sprite %d is out of bounds: %d\n", sprite, numSprites);
+  }
+  texture->renderResizedTopRight(x,y,rects[sprite],resize);
+}
 
 int GPE::MSpriteSheet::getWidth() {
   return textureWidth;
@@ -178,13 +195,13 @@ GPE::MSpriteSheet* GPE::create_spritesheet(MTexture* texture, int x, int y, int 
   return tmp;
 }
 
-GPE::MSpriteSheet* GPE::create_spritesheet(MTexture* texture, MRect* rects, int ns) {
+GPE::MSpriteSheet* GPE::create_spritesheet(MTexture* texture, GPRect* rects, int ns) {
   GPE::MSpriteSheet *tmp = new GPE::MSpriteSheet();
   tmp->init(texture, rects, ns);
   return tmp;
 }
 
-GPE::MSpriteSheet* GPE::create_spritesheet(MTexture* texture, std::vector<MRect> rects) {
+GPE::MSpriteSheet* GPE::create_spritesheet(MTexture* texture, std::vector<GPRect> rects) {
   GPE::MSpriteSheet *tmp = new GPE::MSpriteSheet();
   tmp->init(texture, rects);
   return tmp;

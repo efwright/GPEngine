@@ -29,7 +29,6 @@ _DEPS = MMouseInterface.h \
         MFont.h \
         MColor.h \
         MEngine.h \
-        MObject.h \
         MQueue.h \
         MHitbox.h \
         $(NETWORKDIR)/MPacket.h \
@@ -48,7 +47,6 @@ _OBJ = MSpriteSheet.o \
        MThread.o \
        MFont.o \
        MEngine.o \
-       MObject.o \
        MHitbox.o \
        $(NETWORKDIR)/MPacket.o \
        $(NETWORKDIR)/MUDPSocket.o \

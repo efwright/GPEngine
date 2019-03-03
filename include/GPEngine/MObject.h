@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include "MTexture.h"
-#include "MRect.h"
 
 using namespace GPE;
 
@@ -24,9 +23,9 @@ class MObject {
       int clipw, int cliph);
     void render();
   protected:
-    MRect* clip;
+    GPRect clip;
     MTexture* texture;
-    MRect* position;
+    GPRect position;
 };
 
 #endif

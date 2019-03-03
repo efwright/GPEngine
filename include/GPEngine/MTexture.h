@@ -15,6 +15,8 @@
 namespace GPE
 {
 
+typedef SDL_Rect GPRect;
+
 class MTexture;
 MTexture *create_texture(std::string);
 MTexture *create_texture(std::string, Uint8, Uint8, Uint8);
@@ -261,8 +263,34 @@ class MTexture {
  *  \param resize not required, rect width/height may be used
  *  to resize the image to absolute value
  */
-    void render( int x, int y, MRect* clip = NULL,
-                MRect* resize = NULL);
+    //void render( int x, int y, MRect* clip = NULL,
+    //            MRect* resize = NULL);
+
+    void render(int, int);
+    void render(int, int, GPRect);
+    void render(int, int, int, int);
+    void render(int, int, GPRect, int, int);
+    void renderCentered(int, int);
+    void renderCentered(int, int, GPRect);
+    void renderBottomLeft(int, int);
+    void renderBottomLeft(int, int, GPRect);
+    void renderBottomRight(int, int);
+    void renderBottomRight(int, int, GPRect);
+    void renderTopRight(int, int);
+    void renderTopRight(int, int, GPRect);
+
+    void renderResized(int, int, GPRect);
+    void renderResized(int, int, GPRect, GPRect);
+    void renderResized(int, int, GPRect, int, int);
+    void renderResized(int, int, GPRect, GPRect, int, int);
+    void renderResizedCentered(int, int, GPRect);
+    void renderResizedCentered(int, int, GPRect, GPRect);
+    void renderResizedBottomLeft(int, int, GPRect);
+    void renderResizedBottomLeft(int, int, GPRect, GPRect);
+    void renderResizedBottomRight(int, int, GPRect);
+    void renderResizedBottomRight(int, int, GPRect, GPRect);
+    void renderResizedTopRight(int, int, GPRect);
+    void renderResizedTopRight(int, int, GPRect, GPRect);
 
 //! Render texture to window, user defined anchor
 /*!
@@ -274,9 +302,9 @@ class MTexture {
  *  \param anchorX x coord to anchor to
  *  \param anchorY y coord to anchor to
  */
-    void render( int x, int y,
-                int anchorX, int anchorY,
-                MRect* clip = NULL, MRect* resize = NULL);
+    //void render( int x, int y,
+    //            int anchorX, int anchorY,
+     //           MRect* clip = NULL, MRect* resize = NULL);
 
 //! Render texture to window, using middle as anchor
 /*!
@@ -286,9 +314,9 @@ class MTexture {
  *  \param resize not required, rect width/height may be used
  *  to resize the image to absolute value
  */
-    void renderCentered( int x, int y,
-                        MRect* clip = NULL,
-                        MRect* resize = NULL);
+    //void renderCentered( int x, int y,
+    //                    MRect* clip = NULL,
+    //                    MRect* resize = NULL);
 
 //! Render texture to window, bottom left anchor
 /*!
@@ -298,9 +326,9 @@ class MTexture {
  *  \param resize not required, rect width/height may be used
  *  to resize the image to absolute value
  */
-    void renderBottomLeft( int x, int y,
-                          MRect* clip = NULL,
-                          MRect* resize = NULL);
+    //void renderBottomLeft( int x, int y,
+    //                      MRect* clip = NULL,
+    //                      MRect* resize = NULL);
 
 //! Render texture to window, bottom right anchor
 /*!
@@ -310,9 +338,9 @@ class MTexture {
  *  \param resize not required, rect width/height may be used
  *  to resize the image to absolute value
  */
-    void renderBottomRight( int x, int y,
-                          MRect* clip = NULL,
-                          MRect* resize = NULL);
+    //void renderBottomRight( int x, int y,
+    //                      MRect* clip = NULL,
+    //                      MRect* resize = NULL);
 
 //! Render texture to window, top right anchor
 /*!
@@ -322,9 +350,9 @@ class MTexture {
  *  \param resize not required, rect width/height may be used
  *  to resize the image to absolute value
  */
-    void renderTopRight( int x, int y,
-                          MRect* clip = NULL,
-                          MRect* resize = NULL);
+    //void renderTopRight( int x, int y,
+    //                      MRect* clip = NULL,
+    //                      MRect* resize = NULL);
 
 //! Render texture to window with specified anchor
 /*!
@@ -336,10 +364,10 @@ class MTexture {
  *  \param resize not required, rect width/height may be used
  *  to resize the image to absolute value
  */
-    void renderAnchored( int x, int y,
-                          int anchorX, int anchorY,
-                          MRect* clip = NULL,
-                          MRect* resize = NULL);
+    //void renderAnchored( int x, int y,
+    //                      int anchorX, int anchorY,
+     //                     MRect* clip = NULL,
+     //                     MRect* resize = NULL);
 
 //! Render texture with option of rotation and flip
 /*!
@@ -352,10 +380,10 @@ class MTexture {
  *  \param flip the direction to flip to, can be one of
  *  MTEXTURE_NO_FLIP, MTEXTURE_HORIZONTAL_FLIP, MTEXTURE_VERTICAL_FLIP
  */
-    void renderEx( int x, int y,
-                  double angle, SDL_RendererFlip flip,
-                  MRect* clip = NULL,
-                  MRect* resize = NULL);
+   // void renderEx( int x, int y,
+   //               double angle, SDL_RendererFlip flip,
+   //               MRect* clip = NULL,
+   //               MRect* resize = NULL);
 
 //! Render texture with option of rotation and flip and centered
 /*!
@@ -368,10 +396,10 @@ class MTexture {
  *  \param flip the direction to flip to, can be one of
  *  MTEXTURE_NO_FLIP, MTEXTURE_HORIZONTAL_FLIP, MTEXTURE_VERTICAL_FLIP
  */
-    void renderCenteredEx( int x, int y,
-                  double angle, SDL_RendererFlip flip,
-                  MRect* clip = NULL,
-                  MRect* resize = NULL);
+    //void renderCenteredEx( int x, int y,
+    //              double angle, SDL_RendererFlip flip,
+    //              MRect* clip = NULL,
+    //              MRect* resize = NULL);
                   
 //! Return width of texture
     int getWidth();

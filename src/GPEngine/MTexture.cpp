@@ -490,176 +490,6 @@ bool GPE::MTexture::loadText(std::string text, MFont* font, MColor color)
   return texture != NULL;
 }
 
-void MTexture::render(int x, int y,
-                      MRect* clip, MRect* resize)
-{
-  SDL_Rect renderQuad = {x, y, width, height};
-  SDL_Rect* clipRect = NULL;
-
-  if(clip != NULL) {
-    SDL_Rect clipTemp = clip->getSDLRect();
-    clipRect = &clipTemp;
-    renderQuad.w = clipRect->w;
-    renderQuad.h = clipRect->h;
-  }
-
-  if(resize != NULL) {
-    renderQuad.w = resize->w;
-    renderQuad.h = resize->h;
-  }
-
-  SDL_RenderCopy( gRenderer, texture,
-                  clipRect, &renderQuad );
-}
-
-void GPE::MTexture::render(int x, int y,
-                      int anchorX, int anchorY,
-                      MRect* clip, MRect* resize)
-{
-  SDL_Rect renderQuad = {x-anchorX, y-anchorY, width, height};
-  SDL_Rect* clipRect = NULL;
-
-  if(clip != NULL) {
-    SDL_Rect clipTemp = clip->getSDLRect();
-    clipRect = &clipTemp;
-    renderQuad.w = clipRect->w;
-    renderQuad.h = clipRect->h;
-  }
-
-  if(resize != NULL) {
-    renderQuad.w = resize->w;
-    renderQuad.h = resize->h;
-  }
-
-  SDL_RenderCopy( gRenderer, texture,
-                  clipRect, &renderQuad );
-}
-
-void GPE::MTexture::renderCentered(int x, int y,
-                        MRect* clip, MRect* resize)
-{
-  if(resize != NULL) {
-    render(x, y, resize->w/2, resize->h/2, clip, resize);
-  } else if(clip != NULL) {
-    render(x, y, clip->w/2, clip->h/2, clip, resize);
-  } else {
-    render(x, y, width/2, height/2, clip, resize);
-  }
-}
-
-void GPE::MTexture::renderBottomLeft(int x, int y,
-                          MRect* clip, MRect* resize)
-{
-  if(resize != NULL) {
-    render(x, y, 0, resize->h, clip, resize);
-  } else if(clip != NULL) {
-    render(x, y, 0, clip->h, clip, resize);
-  } else {
-    render(x, y, 0, height, clip, resize);
-  }
-}
-
-void GPE::MTexture::renderBottomRight(int x, int y,
-                          MRect* clip, MRect* resize)
-{
-  if(resize != NULL) {
-    render(x, y, resize->w, resize->h, clip, resize);
-  } else if(clip != NULL) {
-    render(x, y, clip->w, clip->h, clip, resize);
-  } else {
-    render(x, y, width, height, clip, resize);
-  }
-}
-
-void GPE::MTexture::renderTopRight(int x, int y,
-                          MRect* clip, MRect* resize)
-{
-  if(resize != NULL) {
-    render(x, y, resize->w, 0, clip, resize);
-  } else if(clip != NULL) {
-    render(x, y, clip->w, 0, clip, resize);
-  } else {
-    render(x, y, width, 0, clip, resize);
-  }
-}
-
-void GPE::MTexture::renderAnchored(int x, int y,
-                          int anchorX, int anchorY,
-                          MRect* clip, MRect* resize)
-{
-  SDL_Rect renderQuad = {x-anchorX, y-anchorY, width, height};
-  SDL_Rect* clipRect = NULL;
-
-  if(clip != NULL) {
-    SDL_Rect clipTemp = clip->getSDLRect();
-    clipRect = &clipTemp;
-    renderQuad.w = clipRect->w;
-    renderQuad.h = clipRect->h;
-  }
-
-  if(resize != NULL) {
-    renderQuad.w = resize->w;
-    renderQuad.h = resize->h;
-  }
-
-  SDL_RenderCopy( gRenderer, texture,
-                  clipRect, &renderQuad );
-}
-
-void GPE::MTexture::renderEx(int x, int y,
-                  double angle, SDL_RendererFlip flip,
-                  MRect* clip, MRect* resize)
-{
-  SDL_Rect renderQuad = {x, y, width, height};
-  SDL_Rect* clipRect = NULL;
-
-  if(clip != NULL) {
-    SDL_Rect clipTemp = clip->getSDLRect();
-    clipRect = &clipTemp;
-    renderQuad.w = clipRect->w;
-    renderQuad.h = clipRect->h;
-  }
-
-  if(resize != NULL) {
-    renderQuad.w = resize->w;
-    renderQuad.h = resize->h;
-  }
-
-  SDL_Point center = {width/2, height/2};
-
-  SDL_RenderCopyEx( gRenderer, texture,
-                  clipRect, &renderQuad,
-                  angle, &center, flip );
-}
-
-void GPE::MTexture::renderCenteredEx(int x, int y,
-                  double angle, SDL_RendererFlip flip,
-                  MRect* clip, MRect* resize)
-{
-  SDL_Rect renderQuad = {x-(width/2), y-(height/2), width, height};
-  SDL_Rect* clipRect = NULL;
-
-  if(clip != NULL) {
-    SDL_Rect clipTemp = clip->getSDLRect();
-    clipRect = &clipTemp;
-    renderQuad.x = x-(clipRect->w/2);
-    renderQuad.y = y-(clipRect->h/2);
-    renderQuad.w = clipRect->w;
-    renderQuad.h = clipRect->h;
-  }
-
-  if(resize != NULL) {
-    renderQuad.w = resize->w;
-    renderQuad.h = resize->h;
-  }
-
-  SDL_Point center = {width/2, height/2};
-
-  SDL_RenderCopyEx( gRenderer, texture,
-                  clipRect, &renderQuad,
-                  angle, &center, flip );
-}
-
 int GPE::MTexture::getWidth() { return width; }
 
 int GPE::MTexture::getHeight() { return height; }
@@ -816,5 +646,93 @@ MTexture * GPE::create_texture_text(std::string text, MFont* font, MColor color)
 
 void  GPE::destroy_texture(MTexture* texture) {
   delete texture;
+}
+
+void GPE::MTexture::render(int x, int y){
+  GPE::GPRect renderRect = {x,y,width,height};
+  // Render the entire texture to renderRect
+  SDL_RenderCopy(gRenderer, texture, NULL, &renderRect);
+}
+
+void GPE::MTexture::render(int x, int y, GPE::GPRect clip){
+  GPE::GPRect renderRect = {x,y,clip.w,clip.h};
+  // Render clip of texture to renderRect, width/height based on clip width/height
+  SDL_RenderCopy(gRenderer, texture, &clip, &renderRect);
+}
+void GPE::MTexture::render(int x, int y, int anchorX, int anchorY){
+  GPE::GPRect renderRect = {x-anchorX, y-anchorY, width, height};
+  SDL_RenderCopy(gRenderer, texture, NULL, &renderRect);
+}
+void GPE::MTexture::render(int x, int y, GPE::GPRect clip, int anchorX, int anchorY){
+  GPE::GPRect renderRect = {x-anchorX, y-anchorY, clip.w, clip.h};
+  SDL_RenderCopy(gRenderer, texture, &clip, &renderRect);
+}
+void GPE::MTexture::renderCentered(int x, int y){
+  render(x,y,width/2,height/2);
+}
+void GPE::MTexture::renderCentered(int x, int y, GPE::GPRect clip){
+  render(x,y,clip,width/2,height/2);
+}
+void GPE::MTexture::renderBottomLeft(int x, int y){
+  render(x,y,0,height);
+}
+void GPE::MTexture::renderBottomLeft(int x, int y, GPE::GPRect clip){
+  render(x,y,clip,0,height);
+}
+void GPE::MTexture::renderBottomRight(int x, int y){
+  render(x,y,width,height);
+}
+void GPE::MTexture::renderBottomRight(int x, int y, GPE::GPRect clip){
+  render(x,y,clip,width,height);
+}
+void GPE::MTexture::renderTopRight(int x, int y){
+  render(x,y,width,0);
+}
+void GPE::MTexture::renderTopRight(int x, int y, GPE::GPRect clip){
+  render(x,y,clip,width,0);
+}
+
+void GPE::MTexture::renderResized(int x, int y, GPE::GPRect resize){
+  GPE::GPRect renderRect = {x,y,resize.w,resize.h};
+  // Render the entire texture to renderRect
+  SDL_RenderCopy(gRenderer, texture, NULL, &renderRect);
+}
+
+void GPE::MTexture::renderResized(int x, int y, GPE::GPRect clip, GPE::GPRect resize){
+  GPE::GPRect renderRect = {x,y,resize.w,resize.h};
+  // Render clip of texture to renderRect, width/height based on clip width/height
+  SDL_RenderCopy(gRenderer, texture, &clip, &renderRect);
+}
+void GPE::MTexture::renderResized(int x, int y, GPE::GPRect resize, int anchorX, int anchorY){
+  GPE::GPRect renderRect = {x-anchorX, y-anchorY, resize.w, resize.h};
+  SDL_RenderCopy(gRenderer, texture, NULL, &renderRect);
+}
+void GPE::MTexture::renderResized(int x, int y, GPE::GPRect clip, GPE::GPRect resize, int anchorX, int anchorY){
+  GPE::GPRect renderRect = {x-anchorX, y-anchorY, resize.w, resize.h};
+  SDL_RenderCopy(gRenderer, texture, &clip, &renderRect);
+}
+void GPE::MTexture::renderResizedCentered(int x, int y, GPE::GPRect resize){
+  renderResized(x,y,resize,resize.w/2,resize.h/2);
+}
+void GPE::MTexture::renderResizedCentered(int x, int y, GPE::GPRect clip, GPE::GPRect resize){
+  renderResized(x,y,clip,resize,resize.w/2,resize.h/2);
+}
+void GPE::MTexture::renderResizedBottomLeft(int x, int y, GPE::GPRect resize){
+  renderResized(x,y,resize,0,resize.h);
+}
+void GPE::MTexture::renderResizedBottomLeft(int x, int y, GPE::GPRect clip, GPE::GPRect resize){
+  renderResized(x,y,clip,resize,0,resize.h);
+}
+void GPE::MTexture::renderResizedBottomRight(int x, int y, GPE::GPRect resize){
+  renderResized(x,y,resize,resize.w,resize.h);
+}
+void GPE::MTexture::renderResizedBottomRight(int x, int y, GPE::GPRect clip, GPE::GPRect resize){
+  renderResized(x,y,clip,resize,resize.w,resize.h);
+}
+void GPE::MTexture::renderResizedTopRight(int x, int y, GPE::GPRect resize){
+  renderResized(x,y,resize,resize.w,0);
+}
+void GPE::MTexture::renderResizedTopRight(int x, int y, GPE::GPRect clip, GPE::GPRect resize){
+  renderResized(x,y,resize,clip,resize.w,0);
 }
 
