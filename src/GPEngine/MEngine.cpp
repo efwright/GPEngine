@@ -77,6 +77,7 @@ bool handleJoycon(SDL_Event);
 
 // Run
 void start_1thread_drawthread();
+void start_1thread();
 bool running;
 bool shutdown;
 MRenderInterface* renderI;
@@ -110,6 +111,7 @@ void GPE::Engine_Finalize() {
 
 void GPE::Engine_Start() {
   start_1thread_drawthread();
+  //start_1thread();
 }
 
 void GPE::Engine_swapMouse(MMouseInterface* mi) {
@@ -429,5 +431,46 @@ void start_1thread_drawthread() {
   }
   game->quit();
   SDL_UnlockMutex(engineLock);
+}
+
+void start_1thread() {
+  running = true;
+  shutdown = false;
+
+  SDL_Event e;
+  Uint32 eventsProcessed;
+  st = SDL_GetTicks();
+
+  // Initial Draw
+  SDL_RenderClear(gRenderer);
+  renderI->render(ut);
+  et = SDL_GetTicks();
+  if(et < MS_delay) SDL_Delay(MS_delay-et);
+  SDL_Delay(MS_delay);
+  SDL_RenderPresent(gRenderer);
+  SDL_ShowWindow(gWindow);
+
+  while(running) {
+    ut = SDL_GetTicks() - st;
+    st = ut + st;
+    eventsProcessed = 0;
+    while(SDL_PollEvent(&e) != 0 && eventsProcessed < maxEvents) {
+      handleEvent(e);
+      eventsProcessed++;
+    }
+    game->update(ut);
+    SDL_RenderClear(gRenderer);
+    renderI->render(ut);
+    game->updateThreaded(ut);
+    if(shutdown) running = false;
+    et = SDL_GetTicks() - st;
+    while(et < MS_delay && SDL_PollEvent(&e) != 0) {
+      handleEvent(e);
+      et = SDL_GetTicks() - st;
+    }
+    if(et < MS_delay) SDL_Delay(MS_delay-et);
+    SDL_RenderPresent(gRenderer);
+  }
+  game->quit();
 }
 
