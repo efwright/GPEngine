@@ -6,6 +6,10 @@
 #include <string>
 #include <vector>
 
+#include "MGame.h"
+#include "Drawable.h"
+#include "Updateable.h"
+
 //! A Room contains updateable and drawable objects with several environment variables (e.g gravity)
 /*!
  *  A Room is meant to simplify the process of managing objects in a game enviroment. The
@@ -20,10 +24,18 @@
  *  during the highUpdate.
  */
 
+namespace GPE {
+
 class MRoom : public MGame {
   public:
+    void render(Uint32);
+    void update(Uint32);
   private:
+    std::vector<Drawable*> drawObjects;
+    std::vector<Updateable*> updateObjects;
 };
+
+} // End namespace
 
 #endif
 

@@ -26,8 +26,8 @@
 class MGame : public MMouseInterface, public MJoyconInterface, public MRenderInterface, public MKeyboardInterface {
   public:
     virtual void initGame(int, int, unsigned int) {};
-    virtual void update(long) {};
-    virtual void updateThreaded(long) {};
+    virtual void update(Uint32) {};
+    virtual void updateThreaded(Uint32) {};
     virtual void quit() {};
   private:
 };

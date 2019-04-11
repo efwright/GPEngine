@@ -31,6 +31,9 @@ _DEPS = MMouseInterface.h \
         MEngine.h \
         MQueue.h \
         MHitbox.h \
+        MRoom.h \
+        Drawable.h \
+        Updateable.h \
         $(NETWORKDIR)/MPacket.h \
         $(NETWORKDIR)/MUDPSocket.h \
         $(NETWORKDIR)/MTCPSocket.h \
@@ -48,6 +51,7 @@ _OBJ = MSpriteSheet.o \
        MFont.o \
        MEngine.o \
        MHitbox.o \
+       MRoom.o \
        $(NETWORKDIR)/MPacket.o \
        $(NETWORKDIR)/MUDPSocket.o \
        $(NETWORKDIR)/MTCPSocket.o \

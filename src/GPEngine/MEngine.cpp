@@ -92,6 +92,7 @@ void GPE::Engine_Init(std::string name, std::string settings,
  MRenderInterface* ri, MMouseInterface* mi, MJoyconInterface* ji,
  MKeyboardInterface* ki, MGame* g) {
   initSettings(settings);
+  GPE::name = name;
   initWindow();
   init_IMG_TTF_MIX_NET();
   initSound();
