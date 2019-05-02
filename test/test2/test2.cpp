@@ -21,7 +21,7 @@ class Test2Game : public MGame {
     cat->render(GPE::screenWidth/2 - cat->getWidth()/2, GPE::screenHeight/2 - cat->getHeight()/2);
   }
 
-  void update(long et) {
+  void update(Uint32 et) {
     timePassed += et;
     if(timePassed > 3000L) {
       printf("Stopping GPEngine\n");

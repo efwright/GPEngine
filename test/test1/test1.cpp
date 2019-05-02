@@ -8,7 +8,7 @@ class Test1Game : public MGame {
 
   Test1Game() { timePassed = 0L; };
 
-  void update(long et) {
+  void update(Uint32 et) {
     timePassed += et;
     if(timePassed > 1000L) {
       printf("Stopping GPEngine\n");

@@ -25,7 +25,7 @@ class Test3Game : public MGame {
     loadingA->render(0,0);
   }
 
-  void update(long et) {
+  void update(Uint32 et) {
     timePassed += et;
     if(timePassed > 3000L) {
       printf("Stopping GPEngine\n");
